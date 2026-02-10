@@ -1,0 +1,71 @@
+Fix the compilation error in the following Triton kernel.
+
+# Reference PyTorch Implementation
+```python
+{{ pytorch_code }}
+```
+
+# Previous Triton Code (FAILED TO COMPILE)
+```python
+{{ previous_code }}
+```
+
+# Compilation Error
+```
+{{ error_message }}
+```
+
+# Full Traceback
+```
+{{ error_traceback }}
+```
+
+# Your Task
+
+Analyze the error and fix the code. Common compilation issues:
+
+1. **Syntax Errors**
+   - Missing colons, parentheses, brackets
+   - Incorrect indentation
+   - Invalid Triton language constructs
+
+2. **Type Errors**
+   - Incorrect tensor dtypes
+   - Missing constexpr annotations
+   - Type mismatches in operations
+
+3. **Triton-Specific Issues**
+   - Using unsupported Python features (e.g., list comprehensions in kernel)
+   - Incorrect use of tl.* functions
+   - Invalid pointer arithmetic
+   - Missing or incorrect masking
+
+4. **Import Errors**
+   - Missing imports (torch, triton, triton.language)
+   - Incorrect module references
+
+5. **Configuration Errors**
+   - Invalid @triton.autotune configs
+   - Invalid num_warps (must be power of 2)
+   - Invalid BLOCK_SIZE values
+
+# Instructions
+
+1. Identify the root cause of the compilation error
+2. Fix ONLY what is necessary to resolve the error
+3. Preserve the original logic and behavior
+4. Do NOT change the overall structure (Model class, get_inputs, etc.)
+5. Ensure all required components remain present:
+   - @triton.jit kernel
+   - Model class with forward()
+   - get_inputs() function
+   - get_init_inputs() function
+
+# Output Format
+
+Provide the COMPLETE corrected code (entire file), not just the fix. The code must:
+- Compile successfully
+- Maintain the same functionality as the reference PyTorch code
+- Follow KernelBench format requirements
+
+Output ONLY the fixed Python code, no explanations.

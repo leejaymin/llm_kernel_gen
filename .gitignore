@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Database
+*.db
+
+# Logs
+*.log
+
+# Runs (generated outputs)
+runs/
+
+# External dependencies (large repos)
+external/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# omc state
+.omc/

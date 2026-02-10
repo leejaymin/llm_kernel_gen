@@ -1,0 +1,125 @@
+Fix the correctness error in the following Triton kernel.
+
+# Reference PyTorch Implementation (CORRECT BEHAVIOR)
+```python
+{{ pytorch_code }}
+```
+
+# Current Triton Code (INCORRECT OUTPUT)
+```python
+{{ previous_code }}
+```
+
+# Correctness Error Details
+
+**Expected Output Shape:** {{ expected_shape }}
+**Actual Output Shape:** {{ actual_shape }}
+**Maximum Error:** {{ max_error }}
+**Tolerance:** {{ tolerance }}
+
+{% if expected_shape != actual_shape %}
+## Shape Mismatch
+The output shape does not match the expected shape. This indicates:
+- Incorrect dimension calculations
+- Wrong grid size or block configuration
+- Improper tensor reshaping or indexing
+{% endif %}
+
+{% if max_error > tolerance %}
+## Numerical Error
+The output values differ from the reference implementation. Possible causes:
+- Incorrect mathematical operations
+- Precision issues (dtype mismatches)
+- Wrong reduction operations
+- Boundary condition errors
+- Off-by-one errors in indexing
+{% endif %}
+
+# Common Correctness Issues
+
+1. **Indexing Errors**
+   ```python
+   # Wrong: off-by-one
+   offsets = pid * BLOCK_SIZE + tl.arange(1, BLOCK_SIZE + 1)
+
+   # Correct
+   offsets = pid * BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)
+   ```
+
+2. **Stride Calculation Errors**
+   ```python
+   # For 2D tensor (M, N)
+   row_stride = N  # Number of elements to skip per row
+   offset = row_idx * row_stride + col_idx
+   ```
+
+3. **Masking Issues**
+   ```python
+   # Wrong: missing mask on load
+   x = tl.load(input_ptr + offsets)
+
+   # Correct
+   mask = offsets < n_elements
+   x = tl.load(input_ptr + offsets, mask=mask, other=0.0)
+   ```
+
+4. **Reduction Errors**
+   ```python
+   # Wrong axis or missing keepdim
+   result = tl.sum(x, axis=0)  # Check if axis is correct
+
+   # Verify reduction dimension matches PyTorch
+   ```
+
+5. **Dtype Mismatches**
+   ```python
+   # Ensure intermediate computations use appropriate precision
+   x = x.to(tl.float32)  # Promote to fp32 for accuracy
+   result = result.to(tl.float16)  # Downcast only at the end
+   ```
+
+6. **Broadcast Errors**
+   ```python
+   # Ensure shapes are compatible for broadcasting
+   # Use tl.expand_dims or explicit reshaping
+   ```
+
+7. **Boundary Handling**
+   ```python
+   # Partial blocks at the end
+   mask = offsets < n_elements
+   # Use mask consistently on all loads/stores
+   ```
+
+# Debugging Approach
+
+1. **Check Shape Calculation**
+   - Verify grid dimensions match output shape
+   - Confirm block size divides input correctly
+   - Check handling of remainder elements
+
+2. **Verify Math Operations**
+   - Compare operation order with PyTorch
+   - Check for integer vs. float division
+   - Verify use of correct mathematical functions
+
+3. **Trace Index Calculations**
+   - Print/log offset values (in host code)
+   - Verify stride calculations for multi-dim tensors
+   - Check row-major vs. column-major assumptions
+
+4. **Test Edge Cases**
+   - Empty inputs
+   - Single-element tensors
+   - Non-divisible sizes
+
+# Your Task
+
+1. Analyze the error type (shape vs. numerical)
+2. Identify the root cause
+3. Fix the implementation to match PyTorch behavior exactly
+4. Preserve all required components (Model, get_inputs, etc.)
+
+# Output Format
+
+Provide the COMPLETE corrected code. Output ONLY the Python code, no explanations.

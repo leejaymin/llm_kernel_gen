@@ -1,0 +1,57 @@
+# Default configuration for llm-kernel
+# GPU Target
+gpu:
+  name: "RTX PRO 6000 Blackwell"
+  arch: "sm_120"
+  vram_gb: 96
+  memory_bandwidth_gbs: 1792
+  fp16_tflops: 251.9
+  cuda_cores: 24064
+  tensor_cores: 752
+
+# LLM Server
+llm:
+  base_url: "http://localhost:8000/v1"
+  api_key: "EMPTY"
+  timeout: 180
+  default_model: "qwen2.5-coder-32b"
+
+# OpenAI API (optional)
+openai:
+  api_key_env: "OPENAI_API_KEY"  # Environment variable name
+  default_model: "gpt-4o"
+  timeout: 120
+
+# Generation parameters
+generation:
+  temperature: 0.3
+  max_tokens: 8192
+  top_p: 0.95
+  num_samples: 1
+
+# Pipeline
+pipeline:
+  strategy: "iterative"        # single_pass | iterative | best_of_n
+  max_iterations: 5
+  speedup_threshold: 1.0
+  correctness_tolerance: 1.0e-02
+  timeout_seconds: 300
+
+# KernelBench
+kernelbench:
+  dataset_src: "huggingface"
+  backend: "triton"
+  eval_mode: "local"
+  n_correctness: 5
+  n_trial: 10
+
+# TritonBench
+tritonbench:
+  repo_path: "external/TritonBench"
+  enabled: true
+  default_channel: "T"  # T (Triton) or G (General)
+
+# Execution
+execution:
+  max_workers: 4
+  run_dir: "runs"

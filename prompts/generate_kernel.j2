@@ -1,0 +1,112 @@
+Generate a Triton GPU kernel that implements the following operation.
+
+# Reference PyTorch Implementation
+```python
+{{ pytorch_code }}
+```
+
+# Operation Description
+{{ operation_description }}
+
+# Input Shapes
+{% for name, shape in input_shapes.items() %}
+- {{ name }}: {{ shape }}
+{% endfor %}
+
+# Requirements
+
+1. **Convert the PyTorch reference code to an equivalent Triton kernel**
+   - Preserve the exact mathematical behavior
+   - Handle all edge cases (boundaries, empty inputs, etc.)
+   - Use proper masking for memory safety
+
+2. **Output Format**
+   You MUST provide a complete, runnable Python file with:
+
+   a) The Triton kernel with @triton.jit decorator
+      - Use @triton.autotune with multiple configurations
+      - Include at least 4-6 different block size configs
+      - Add proper docstring explaining the operation
+
+   b) A Model class that wraps the kernel
+      ```python
+      class Model(torch.nn.Module):
+          def __init__(self):
+              super().__init__()
+
+          def forward(self, ...):
+              # Call your Triton kernel
+              # Return output tensor(s)
+      ```
+
+   c) A get_inputs() function
+      ```python
+      def get_inputs():
+          # Return tuple of sample inputs for benchmarking
+          # Use realistic shapes matching the operation
+          return (input1, input2, ...)
+      ```
+
+   d) A get_init_inputs() function
+      ```python
+      def get_init_inputs():
+          return {'forward': get_inputs()}
+      ```
+
+3. **Optimization Targets**
+   - Maximize memory coalescing
+   - Minimize global memory transactions
+   - Use shared memory where beneficial
+   - Leverage hardware features (Tensor Cores if applicable)
+
+4. **Code Quality**
+   - Clear variable names
+   - Inline comments for complex logic
+   - Proper type hints
+   - Handle all tensor dimensions correctly
+
+# Example Structure
+
+```python
+import torch
+import triton
+import triton.language as tl
+
+@triton.autotune(
+    configs=[
+        triton.Config({'BLOCK_SIZE': 64}, num_warps=2),
+        triton.Config({'BLOCK_SIZE': 128}, num_warps=4),
+        triton.Config({'BLOCK_SIZE': 256}, num_warps=4),
+        triton.Config({'BLOCK_SIZE': 512}, num_warps=8),
+        triton.Config({'BLOCK_SIZE': 1024}, num_warps=8),
+    ],
+    key=['n_elements'],
+)
+@triton.jit
+def my_kernel(...):
+    """
+    Kernel description here.
+    """
+    # Implementation
+    pass
+
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, ...):
+        # Kernel invocation
+        return output
+
+
+def get_inputs():
+    # Generate sample inputs
+    return (...)
+
+
+def get_init_inputs():
+    return {'forward': get_inputs()}
+```
+
+Now generate the complete Triton kernel implementation. Output ONLY the Python code, no explanations before or after.

@@ -1,0 +1,277 @@
+# Model Registry: 96GB VRAM Budget Optimization
+# Strategy: Use original (unquantized) models when they fit, quantize only when needed
+
+models:
+  # ============================================================
+  # Tier 1: Fits in 96GB VRAM as original (FP16/BF16)
+  # ============================================================
+
+  qwen2.5-coder-7b:
+    name: "Qwen/Qwen2.5-Coder-7B-Instruct"
+    family: "qwen"
+    params: "7B"
+    vram_fp16_gb: 14
+    vram_strategy: "original"  # FP16 fits easily
+    quantization: null
+    dtype: "bfloat16"
+    max_model_len: 32768
+    strengths:
+      - "Fast iteration speed"
+      - "Good for simple kernels (Level 1)"
+    server: "vllm"
+    gpu_memory_utilization: 0.2
+
+  qwen2.5-coder-14b:
+    name: "Qwen/Qwen2.5-Coder-14B-Instruct"
+    family: "qwen"
+    params: "14B"
+    vram_fp16_gb: 28
+    vram_strategy: "original"
+    quantization: null
+    dtype: "bfloat16"
+    max_model_len: 32768
+    strengths:
+      - "Good balance of speed and quality"
+      - "Level 1-2 problems"
+    server: "vllm"
+    gpu_memory_utilization: 0.35
+
+  qwen2.5-coder-32b:
+    name: "Qwen/Qwen2.5-Coder-32B-Instruct"
+    family: "qwen"
+    params: "32B"
+    vram_fp16_gb: 64
+    vram_strategy: "original"
+    quantization: null
+    dtype: "bfloat16"
+    max_model_len: 16384
+    strengths:
+      - "Best open-source code generation"
+      - "KernelLLM project validated Triton capability"
+      - "All levels"
+    server: "vllm"
+    gpu_memory_utilization: 0.70
+
+  deepseek-coder-v2-lite:
+    name: "deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct"
+    family: "deepseek"
+    params: "16B"
+    vram_fp16_gb: 32
+    vram_strategy: "original"
+    quantization: null
+    dtype: "bfloat16"
+    max_model_len: 16384
+    strengths:
+      - "MoE architecture, fast inference"
+      - "Strong reasoning ability"
+    server: "vllm"
+    gpu_memory_utilization: 0.40
+
+  glm-4-9b:
+    name: "THUDM/glm-4-9b-chat"
+    family: "glm"
+    params: "9B"
+    vram_fp16_gb: 18
+    vram_strategy: "original"
+    quantization: null
+    dtype: "bfloat16"
+    max_model_len: 32768
+    strengths:
+      - "Strong multilingual capability"
+      - "Good code understanding"
+    server: "vllm"
+    gpu_memory_utilization: 0.25
+
+  codegeex-4-9b:
+    name: "THUDM/codegeex4-all-9b"
+    family: "glm"
+    params: "9B"
+    vram_fp16_gb: 18
+    vram_strategy: "original"
+    quantization: null
+    dtype: "bfloat16"
+    max_model_len: 32768
+    strengths:
+      - "Code-specialized GLM variant"
+      - "Optimized for code generation"
+    server: "vllm"
+    gpu_memory_utilization: 0.25
+
+  starcoder2-15b:
+    name: "bigcode/starcoder2-15b-instruct-v0.1"
+    family: "starcoder"
+    params: "15B"
+    vram_fp16_gb: 30
+    vram_strategy: "original"
+    quantization: null
+    dtype: "bfloat16"
+    max_model_len: 16384
+    strengths:
+      - "Trained on The Stack v2"
+      - "Strong fill-in-the-middle"
+    server: "vllm"
+    gpu_memory_utilization: 0.35
+
+  codestral-22b:
+    name: "mistralai/Codestral-22B-v0.1"
+    family: "mistral"
+    params: "22B"
+    vram_fp16_gb: 44
+    vram_strategy: "original"
+    quantization: null
+    dtype: "bfloat16"
+    max_model_len: 32768
+    strengths:
+      - "Mistral's code-specialized model"
+      - "80+ programming languages"
+    server: "vllm"
+    gpu_memory_utilization: 0.50
+
+  # ============================================================
+  # Tier 2: Needs quantization for 96GB (>48GB at FP16)
+  # ============================================================
+
+  qwen2.5-coder-72b:
+    name: "Qwen/Qwen2.5-Coder-72B-Instruct-AWQ"
+    family: "qwen"
+    params: "72B"
+    vram_fp16_gb: 144  # Too large for FP16
+    vram_strategy: "quantized"
+    quantization: "awq"
+    dtype: "float16"
+    max_model_len: 8192
+    strengths:
+      - "Highest quality Qwen coder"
+      - "Near-frontier performance"
+      - "Level 3-4 problems"
+    server: "vllm"
+    gpu_memory_utilization: 0.85
+
+  deepseek-coder-v2-236b:
+    name: "deepseek-ai/DeepSeek-Coder-V2-Instruct"
+    family: "deepseek"
+    params: "236B (21B active)"
+    vram_fp16_gb: 160  # MoE but still large
+    vram_strategy: "quantized"
+    quantization: "awq"
+    dtype: "float16"
+    max_model_len: 8192
+    strengths:
+      - "Top-tier code reasoning"
+      - "MoE - only 21B params active"
+    server: "vllm"
+    gpu_memory_utilization: 0.90
+    notes: "Check AWQ availability; may need GPTQ"
+
+  # ============================================================
+  # Tier 3: Latest experimental models (2025-2026)
+  # ============================================================
+
+  gpt-oss-1:
+    name: "gpt-oss/gpt-oss-1"
+    family: "gpt-oss"
+    params: "varies"
+    vram_fp16_gb: null  # Check actual model
+    vram_strategy: "auto"  # Auto-detect
+    quantization: null
+    dtype: "auto"
+    max_model_len: 16384
+    strengths:
+      - "Open-source GPT variant"
+      - "Community-driven development"
+    server: "vllm"
+    gpu_memory_utilization: 0.50
+    notes: "Verify HuggingFace model ID before use"
+
+  qwen3-coder:
+    name: "Qwen/Qwen3-Coder"
+    family: "qwen"
+    params: "varies"
+    vram_fp16_gb: null
+    vram_strategy: "auto"
+    quantization: null
+    dtype: "auto"
+    max_model_len: 32768
+    strengths:
+      - "Next-gen Qwen coder"
+      - "Expected improvements in code reasoning"
+    server: "vllm"
+    gpu_memory_utilization: 0.50
+    notes: "Check availability on HuggingFace"
+
+  # ============================================================
+  # OpenAI GPT Models (Commercial API)
+  # ============================================================
+
+  gpt-4o:
+    name: "gpt-4o"
+    family: "gpt"
+    params: "Unknown"
+    vram_fp16_gb: null  # API-based, no local VRAM
+    vram_strategy: "api"
+    quantization: null
+    dtype: null
+    max_model_len: 16384
+    strengths:
+      - "Latest GPT-4 optimized model"
+      - "Best reasoning capability"
+      - "128K context window"
+    server: "openai"
+    gpu_memory_utilization: null
+
+  gpt-4-turbo:
+    name: "gpt-4-turbo"
+    family: "gpt"
+    params: "Unknown"
+    vram_fp16_gb: null
+    vram_strategy: "api"
+    quantization: null
+    dtype: null
+    max_model_len: 4096
+    strengths:
+      - "Fast GPT-4 variant"
+      - "Good balance of speed and quality"
+    server: "openai"
+    gpu_memory_utilization: null
+
+  gpt-4o-mini:
+    name: "gpt-4o-mini"
+    family: "gpt"
+    params: "Unknown"
+    vram_fp16_gb: null
+    vram_strategy: "api"
+    quantization: null
+    dtype: null
+    max_model_len: 16384
+    strengths:
+      - "Lightweight GPT-4o"
+      - "Fast iteration speed"
+      - "Cost-effective"
+    server: "openai"
+    gpu_memory_utilization: null
+
+  gpt-3.5-turbo:
+    name: "gpt-3.5-turbo"
+    family: "gpt"
+    params: "Unknown"
+    vram_fp16_gb: null
+    vram_strategy: "api"
+    quantization: null
+    dtype: null
+    max_model_len: 4096
+    strengths:
+      - "Fast and economical"
+      - "Good for simple tasks"
+      - "Lower quality than GPT-4"
+    server: "openai"
+    gpu_memory_utilization: null
+
+# VRAM Budget Strategy
+vram_strategy:
+  total_vram_gb: 96
+  kernel_eval_reserved_gb: 20  # Reserved for Triton compilation + execution
+  max_model_vram_gb: 76        # 96 - 20
+  selection_rules:
+    - "If model FP16 VRAM <= max_model_vram_gb: use original (no quantization)"
+    - "If model FP16 VRAM > max_model_vram_gb: use AWQ/GPTQ quantization"
+    - "If quantized VRAM still > max_model_vram_gb: skip model"

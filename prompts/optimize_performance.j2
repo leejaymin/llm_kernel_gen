@@ -1,0 +1,183 @@
+Optimize the performance of the following Triton kernel.
+
+# Reference PyTorch Implementation
+```python
+{{ pytorch_code }}
+```
+
+# Current Triton Code
+```python
+{{ current_code }}
+```
+
+# Performance Metrics
+
+**Current Speedup:** {{ current_speedup }}x over PyTorch
+**Target Speedup:** {{ target_speedup }}x over PyTorch
+
+{% if profile_summary %}
+# Profiling Summary
+{{ profile_summary }}
+{% endif %}
+
+# Target Hardware
+{{ gpu_spec }}
+
+# Optimization Strategy
+
+{% if 'Blackwell' in gpu_spec or 'H100' in gpu_spec or 'H200' in gpu_spec %}
+## Blackwell/Hopper-Specific Optimizations
+
+1. **FP8 Tensor Cores**
+   - Use FP8 for matrix multiplications when accuracy allows
+   - Requires careful scaling to maintain numerical stability
+   ```python
+   # Convert to FP8 for compute
+   x_fp8 = x.to(tl.float8e4m3)
+   y_fp8 = y.to(tl.float8e4m3)
+   result = tl.dot(x_fp8, y_fp8)
+   result = result.to(tl.float32)  # Convert back
+   ```
+
+2. **Asynchronous Memory Operations**
+   - Use async copy for overlapping memory and compute
+   - Pipeline data loading with computation
+   ```python
+   @triton.Config({..., num_stages=3})  # Enable pipelining
+   ```
+
+3. **Tensor Memory Accelerator (TMA)**
+   - Available on Hopper/Blackwell
+   - More efficient bulk memory transfers
+
+{% endif %}
+
+## General Optimization Techniques
+
+### 1. Memory Access Optimization
+
+**Coalescing**
+```python
+# Good: coalesced access
+offsets = pid * BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)
+x = tl.load(input_ptr + offsets)
+
+# Bad: strided access (avoid if possible)
+offsets = pid + tl.arange(0, N) * stride
+```
+
+**Vectorization**
+```python
+# Use larger data types when possible
+# Load 4 floats at once instead of 1
+```
+
+**Shared Memory for Reuse**
+```python
+# Cache frequently accessed data in shared memory
+shared_data = tl.zeros([BLOCK_SIZE], dtype=tl.float32)
+# Use shared_data multiple times
+```
+
+### 2. Compute Optimization
+
+**Use Tensor Cores**
+```python
+# Matrix multiply uses Tensor Cores automatically
+result = tl.dot(a, b)  # Hardware accelerated
+```
+
+**Fuse Operations**
+```python
+# Fuse element-wise operations to reduce memory traffic
+# Before: load, compute, store, load, compute, store
+# After: load, compute1, compute2, store
+result = tl.exp(x * alpha + beta)  # Fused
+```
+
+**Reduce Precision When Safe**
+```python
+# Use FP16/BF16 for intermediate values
+x = x.to(tl.float16)
+# Accumulate in FP32 for stability
+acc = acc.to(tl.float32)
+```
+
+### 3. Autotuning Configuration
+
+Expand search space:
+```python
+@triton.autotune(
+    configs=[
+        # Vary block sizes
+        triton.Config({'BLOCK_M': 64, 'BLOCK_N': 64}, num_warps=2),
+        triton.Config({'BLOCK_M': 128, 'BLOCK_N': 128}, num_warps=4),
+        triton.Config({'BLOCK_M': 256, 'BLOCK_N': 128}, num_warps=8),
+
+        # Try different warp counts
+        triton.Config({'BLOCK_M': 128, 'BLOCK_N': 128}, num_warps=2),
+        triton.Config({'BLOCK_M': 128, 'BLOCK_N': 128}, num_warps=4),
+        triton.Config({'BLOCK_M': 128, 'BLOCK_N': 128}, num_warps=8),
+
+        # Enable pipelining
+        triton.Config({'BLOCK_M': 128, 'BLOCK_N': 128}, num_warps=4, num_stages=2),
+        triton.Config({'BLOCK_M': 128, 'BLOCK_N': 128}, num_warps=4, num_stages=3),
+        triton.Config({'BLOCK_M': 128, 'BLOCK_N': 128}, num_warps=4, num_stages=4),
+    ],
+    key=['M', 'N', 'K'],  # Autotuning dimensions
+)
+```
+
+### 4. Grid/Block Configuration
+
+**Maximize Occupancy**
+- Balance threads per block vs. register usage
+- Aim for 50%+ occupancy
+- Check: `num_warps * 32 ≤ max_threads_per_sm`
+
+**Optimize Grid Size**
+```python
+# Ensure enough blocks to saturate GPU
+grid = lambda meta: (
+    triton.cdiv(M, meta['BLOCK_M']),
+    triton.cdiv(N, meta['BLOCK_N']),
+)
+```
+
+### 5. Algorithm-Specific Optimizations
+
+**Reductions**
+- Use warp shuffle for small reductions
+- Tree reduction for larger ones
+- Atomic operations for global reductions
+
+**Matrix Operations**
+- Tile to fit in shared memory
+- Block matrix multiply with tl.dot
+- Transpose in shared memory to avoid strided access
+
+**Element-wise Operations**
+- Use vectorized operations
+- Fuse multiple passes into one
+- Leverage broadcasting
+
+# Performance Targets by Operation Type
+
+| Operation | Target Speedup | Key Optimization |
+|-----------|----------------|------------------|
+| Element-wise | 2-5x | Memory coalescing, fusion |
+| Reductions | 3-10x | Shared memory, tree reduction |
+| Matrix Multiply | 5-20x | Tensor Cores, tiling |
+| Activation Functions | 2-5x | Fusion, vectorization |
+
+# Your Task
+
+1. Analyze the current bottleneck (memory-bound vs. compute-bound)
+2. Apply 2-3 high-impact optimizations
+3. Expand autotune configurations (at least 8-10 configs)
+4. Preserve correctness - do NOT break functionality
+5. Maintain KernelBench format
+
+# Output Format
+
+Provide the COMPLETE optimized code. Output ONLY the Python code, no explanations.
