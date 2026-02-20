@@ -14,7 +14,7 @@ from typing import Optional, Dict, Any, List
 
 import yaml
 from openai import OpenAI, AsyncOpenAI
-from openai import APIError, APIConnectionError, RateLimitError, APITimeoutError
+from openai import APIError, APIConnectionError, RateLimitError, APITimeoutError, NotFoundError
 
 
 @dataclass
@@ -93,6 +93,9 @@ class LLMClient:
 
         self.model_config = self._load_model_config(config_path)
 
+        # Cache for models that require completions API (non-chat models)
+        self._non_chat_models: set = set()
+
         # Initialize OpenAI clients
         self.client = OpenAI(
             base_url=self.base_url,
@@ -160,6 +163,222 @@ class LLMClient:
 
         return {"max_tokens": 8192, "temperature": 0.3}
 
+    @staticmethod
+    def _is_non_chat_error(error: Exception) -> bool:
+        """
+        Check if the error indicates the model doesn't support chat completions.
+
+        Args:
+            error: The API error to check
+
+        Returns:
+            True if the error indicates a non-chat model
+        """
+        error_msg = str(error).lower()
+        return (
+            isinstance(error, (NotFoundError, APIError))
+            and ("not a chat model" in error_msg or "chat/completions" in error_msg)
+        )
+
+    def _generate_completions(
+        self,
+        prompt: str,
+        model_name: str,
+        temperature: float,
+        max_tokens: int,
+        top_p: float,
+        stop: Optional[List[str]],
+        system_message: Optional[str] = None,
+    ) -> GenerationResult:
+        """
+        Generate using the text completions API (v1/completions) for non-chat models.
+
+        Args:
+            prompt: Input prompt
+            model_name: Resolved model name
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens to generate
+            top_p: Nucleus sampling parameter
+            stop: Stop sequences
+            system_message: Optional system message to prepend
+
+        Returns:
+            GenerationResult with code and metadata
+        """
+        # Combine system message and prompt into a single text prompt
+        full_prompt = ""
+        if system_message:
+            full_prompt += system_message + "\n\n"
+        full_prompt += prompt
+
+        last_error = None
+
+        for attempt in range(self.max_retries):
+            try:
+                start_time = time.time()
+
+                response = self.client.completions.create(
+                    model=model_name,
+                    prompt=full_prompt,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    top_p=top_p,
+                    stop=stop,
+                )
+
+                latency_ms = (time.time() - start_time) * 1000
+
+                choice = response.choices[0]
+                code = choice.text or ""
+                finish_reason = choice.finish_reason
+
+                tokens_used = 0
+                if response.usage:
+                    tokens_used = response.usage.total_tokens
+
+                return GenerationResult(
+                    code=code,
+                    raw_response=code,
+                    tokens_used=tokens_used,
+                    latency_ms=latency_ms,
+                    model_name=model_name,
+                    finish_reason=finish_reason,
+                )
+
+            except (APIConnectionError, APITimeoutError, RateLimitError) as e:
+                last_error = str(e)
+                if attempt < self.max_retries - 1:
+                    delay = self._exponential_backoff(attempt)
+                    time.sleep(delay)
+                    continue
+
+                return GenerationResult(
+                    code="",
+                    raw_response="",
+                    tokens_used=0,
+                    latency_ms=0.0,
+                    model_name=model_name,
+                    error=f"Completions API failed after {self.max_retries} retries: {last_error}",
+                )
+
+            except Exception as e:
+                return GenerationResult(
+                    code="",
+                    raw_response="",
+                    tokens_used=0,
+                    latency_ms=0.0,
+                    model_name=model_name,
+                    error=f"Completions API error: {str(e)}",
+                )
+
+        return GenerationResult(
+            code="",
+            raw_response="",
+            tokens_used=0,
+            latency_ms=0.0,
+            model_name=model_name,
+            error=f"Completions API failed after {self.max_retries} retries",
+        )
+
+    async def _agenerate_completions(
+        self,
+        prompt: str,
+        model_name: str,
+        temperature: float,
+        max_tokens: int,
+        top_p: float,
+        stop: Optional[List[str]],
+        system_message: Optional[str] = None,
+    ) -> GenerationResult:
+        """
+        Async generate using the text completions API (v1/completions) for non-chat models.
+
+        Args:
+            prompt: Input prompt
+            model_name: Resolved model name
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens to generate
+            top_p: Nucleus sampling parameter
+            stop: Stop sequences
+            system_message: Optional system message to prepend
+
+        Returns:
+            GenerationResult with code and metadata
+        """
+        full_prompt = ""
+        if system_message:
+            full_prompt += system_message + "\n\n"
+        full_prompt += prompt
+
+        last_error = None
+
+        for attempt in range(self.max_retries):
+            try:
+                start_time = time.time()
+
+                response = await self.async_client.completions.create(
+                    model=model_name,
+                    prompt=full_prompt,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    top_p=top_p,
+                    stop=stop,
+                )
+
+                latency_ms = (time.time() - start_time) * 1000
+
+                choice = response.choices[0]
+                code = choice.text or ""
+                finish_reason = choice.finish_reason
+
+                tokens_used = 0
+                if response.usage:
+                    tokens_used = response.usage.total_tokens
+
+                return GenerationResult(
+                    code=code,
+                    raw_response=code,
+                    tokens_used=tokens_used,
+                    latency_ms=latency_ms,
+                    model_name=model_name,
+                    finish_reason=finish_reason,
+                )
+
+            except (APIConnectionError, APITimeoutError, RateLimitError) as e:
+                last_error = str(e)
+                if attempt < self.max_retries - 1:
+                    delay = self._exponential_backoff(attempt)
+                    await asyncio.sleep(delay)
+                    continue
+
+                return GenerationResult(
+                    code="",
+                    raw_response="",
+                    tokens_used=0,
+                    latency_ms=0.0,
+                    model_name=model_name,
+                    error=f"Completions API failed after {self.max_retries} retries: {last_error}",
+                )
+
+            except Exception as e:
+                return GenerationResult(
+                    code="",
+                    raw_response="",
+                    tokens_used=0,
+                    latency_ms=0.0,
+                    model_name=model_name,
+                    error=f"Completions API error: {str(e)}",
+                )
+
+        return GenerationResult(
+            code="",
+            raw_response="",
+            tokens_used=0,
+            latency_ms=0.0,
+            model_name=model_name,
+            error=f"Completions API failed after {self.max_retries} retries",
+        )
+
     def _exponential_backoff(self, attempt: int) -> float:
         """
         Calculate exponential backoff delay.
@@ -206,6 +425,18 @@ class LLMClient:
             temperature = model_params.get("temperature", 0.3)
         if max_tokens is None:
             max_tokens = model_params.get("max_tokens", 8192)
+
+        # If model is known to be non-chat, go directly to completions API
+        if model_name in self._non_chat_models:
+            return self._generate_completions(
+                prompt=prompt,
+                model_name=model_name,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                top_p=top_p,
+                stop=stop,
+                system_message=system_message,
+            )
 
         last_error = None
 
@@ -274,7 +505,20 @@ class LLMClient:
                     error=f"Failed after {self.max_retries} retries: {last_error}",
                 )
 
-            except APIError as e:
+            except (NotFoundError, APIError) as e:
+                # Check if this is a non-chat model error → fallback to completions API
+                if self._is_non_chat_error(e):
+                    self._non_chat_models.add(model_name)
+                    return self._generate_completions(
+                        prompt=prompt,
+                        model_name=model_name,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        top_p=top_p,
+                        stop=stop,
+                        system_message=system_message,
+                    )
+
                 # Non-retryable API error
                 return GenerationResult(
                     code="",
@@ -340,6 +584,18 @@ class LLMClient:
             temperature = model_params.get("temperature", 0.3)
         if max_tokens is None:
             max_tokens = model_params.get("max_tokens", 8192)
+
+        # If model is known to be non-chat, go directly to completions API
+        if model_name in self._non_chat_models:
+            return await self._agenerate_completions(
+                prompt=prompt,
+                model_name=model_name,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                top_p=top_p,
+                stop=stop,
+                system_message=system_message,
+            )
 
         last_error = None
 
@@ -408,7 +664,20 @@ class LLMClient:
                     error=f"Failed after {self.max_retries} retries: {last_error}",
                 )
 
-            except APIError as e:
+            except (NotFoundError, APIError) as e:
+                # Check if this is a non-chat model error → fallback to completions API
+                if self._is_non_chat_error(e):
+                    self._non_chat_models.add(model_name)
+                    return await self._agenerate_completions(
+                        prompt=prompt,
+                        model_name=model_name,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        top_p=top_p,
+                        stop=stop,
+                        system_message=system_message,
+                    )
+
                 # Non-retryable API error
                 return GenerationResult(
                     code="",
