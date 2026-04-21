@@ -1,0 +1,188 @@
+% Figure: System Architecture Diagram
+% 사용법: \input{figures/fig_system_architecture.tex}
+\begin{figure*}[t]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=0.55cm and 0.7cm,
+    % Layer header style
+    layerhdr/.style={rectangle, draw=#1!70, fill=#1!25, rounded corners=3pt,
+                     minimum height=0.65cm, minimum width=2.6cm, align=center,
+                     font=\small\bfseries\sffamily},
+    % Module box style
+    modbox/.style={rectangle, draw=#1!60, fill=#1!10, rounded corners=2pt,
+                   minimum height=0.75cm, minimum width=2.5cm, align=center,
+                   font=\scriptsize\sffamily},
+    % External node style
+    extbox/.style={rectangle, draw=gray!60, fill=gray!8, rounded corners=4pt,
+                   minimum height=0.75cm, minimum width=2.5cm, align=center,
+                   font=\scriptsize\sffamily, dashed},
+    % Data flow arrows
+    arr/.style={-{Stealth[length=5pt]}, thick, color=black!60},
+    extarr/.style={-{Stealth[length=5pt]}, thick, color=gray!60, dashed},
+    % Label style
+    lbl/.style={font=\scriptsize\sffamily, color=black!55},
+    lbltiny/.style={font=\tiny\sffamily, color=black!50},
+]
+
+%% ============================================================
+%% ROW 0 (top): CLI layer
+%% ============================================================
+\node[layerhdr=blue] (cli_hdr) {CLI Layer};
+\node[modbox=blue, right=0.4cm of cli_hdr] (cli)
+    {\texttt{cli.py}\\{\tiny Typer CLI}};
+
+%% ============================================================
+%% ROW 1: Bench layer  (below CLI)
+%% ============================================================
+\node[layerhdr=teal, below=1.1cm of cli_hdr] (bench_hdr) {Bench Layer};
+
+\node[modbox=teal, right=0.4cm of bench_hdr] (loader)
+    {\texttt{problem\_loader.py}\\{\tiny HuggingFace Dataset}};
+\node[modbox=teal, right=0.6cm of loader] (runner)
+    {\texttt{runner.py}\\{\tiny Subprocess Isolation}};
+\node[modbox=teal, right=0.6cm of runner] (results)
+    {\texttt{results.py}\\{\tiny Result Aggregation}};
+\node[modbox=teal, right=0.6cm of results] (submission)
+    {\texttt{submission.py}\\{\tiny Submission Format}};
+
+%% ============================================================
+%% ROW 2: Client layer  (below Bench)
+%% ============================================================
+\node[layerhdr=purple, below=1.1cm of bench_hdr] (client_hdr) {Client Layer};
+
+\node[modbox=purple, right=0.4cm of client_hdr] (llmclient)
+    {\texttt{llm\_client.py}\\{\tiny Multi-API Client}};
+\node[modbox=purple, right=0.6cm of llmclient] (promptbuilder)
+    {\texttt{prompt\_builder.py}\\{\tiny GPU Spec + Patterns}};
+\node[modbox=purple, right=0.6cm of promptbuilder] (responseparser)
+    {\texttt{response\_parser.py}\\{\tiny Code Extraction}};
+
+%% ============================================================
+%% ROW 3: Pipeline layer  (below Client)
+%% ============================================================
+\node[layerhdr=orange, below=1.1cm of client_hdr] (pipeline_hdr) {Pipeline Layer};
+
+\node[modbox=orange, right=0.4cm of pipeline_hdr] (orchestrator)
+    {\texttt{orchestrator.py}\\{\tiny State Machine}};
+\node[modbox=orange, right=0.6cm of orchestrator] (generator)
+    {\texttt{generator.py}\\{\tiny Code Generation}};
+\node[modbox=orange, right=0.6cm of generator] (evaluator)
+    {\texttt{evaluator.py}\\{\tiny Correctness + Perf}};
+\node[modbox=orange, right=0.6cm of evaluator] (reflector)
+    {\texttt{reflector.py}\\{\tiny Error Classifier}};
+\node[modbox=orange, right=0.6cm of reflector] (optimizer)
+    {\texttt{optimizer.py}\\{\tiny Static Analysis}};
+
+%% ============================================================
+%% ROW 4: Knowledge + Storage  (side-by-side, below Pipeline)
+%% ============================================================
+\node[layerhdr=green!70!black, below=1.1cm of pipeline_hdr] (know_hdr)
+    {Knowledge Layer};
+
+\node[modbox=green!70!black, right=0.4cm of know_hdr] (gpuspecs)
+    {\texttt{gpu\_specs.py}\\{\tiny HW Specifications}};
+\node[modbox=green!70!black, right=0.6cm of gpuspecs] (tritonpat)
+    {\texttt{triton\_patterns.py}\\{\tiny Pattern DB}};
+\node[modbox=green!70!black, right=0.6cm of tritonpat] (blackwell)
+    {\texttt{blackwell\_hints.py}\\{\tiny Arch Hints}};
+
+% Storage header aligned to right of knowledge modules
+\node[layerhdr=red!70!black, right=1.4cm of blackwell] (storage_hdr)
+    {Storage Layer};
+\node[modbox=red!70!black, right=0.4cm of storage_hdr] (cache)
+    {\texttt{kernel\_cache.py}\\{\tiny Kernel Cache}};
+\node[modbox=red!70!black, right=0.6cm of cache] (runstore)
+    {\texttt{run\_store.py}\\{\tiny Run Results}};
+
+%% ============================================================
+%% External systems (right column)
+%% ============================================================
+% Compute the x position to align with right edge
+\node[extbox, right=2.2cm of submission] (hfdata)
+    {HuggingFace\\Datasets};
+\node[extbox, below=0.5cm of hfdata] (openai)
+    {OpenAI API\\{\tiny Chat / Responses}};
+\node[extbox, below=0.5cm of openai] (vllm)
+    {vLLM Server\\{\tiny Local Inference}};
+\node[extbox, below=0.5cm of vllm] (gpu)
+    {NVIDIA GPU\\{\tiny RTX PRO Blackwell}};
+
+%% ============================================================
+%% Layer background boxes
+%% ============================================================
+\begin{scope}[on background layer]
+  % CLI
+  \node[draw=blue!40, fill=blue!4, rounded corners=6pt,
+        fit=(cli_hdr)(cli), inner sep=7pt] (cli_bg) {};
+  % Bench
+  \node[draw=teal!40, fill=teal!4, rounded corners=6pt,
+        fit=(bench_hdr)(loader)(runner)(results)(submission), inner sep=7pt] (bench_bg) {};
+  % Client
+  \node[draw=purple!40, fill=purple!4, rounded corners=6pt,
+        fit=(client_hdr)(llmclient)(promptbuilder)(responseparser), inner sep=7pt] (client_bg) {};
+  % Pipeline
+  \node[draw=orange!50, fill=orange!4, rounded corners=6pt,
+        fit=(pipeline_hdr)(orchestrator)(generator)(evaluator)(reflector)(optimizer),
+        inner sep=7pt] (pipeline_bg) {};
+  % Knowledge
+  \node[draw=green!50!black!40, fill=green!4, rounded corners=6pt,
+        fit=(know_hdr)(gpuspecs)(tritonpat)(blackwell), inner sep=7pt] (know_bg) {};
+  % Storage
+  \node[draw=red!40, fill=red!4, rounded corners=6pt,
+        fit=(storage_hdr)(cache)(runstore), inner sep=7pt] (storage_bg) {};
+\end{scope}
+
+%% ============================================================
+%% Internal data-flow arrows (top → bottom between layers)
+%% ============================================================
+% CLI → Bench
+\draw[arr] (cli_bg.south) -- node[lbl, right=2pt] {Problem ID} (bench_bg.north);
+
+% Bench → Client (loader feeds prompt builder; runner uses evaluator)
+\draw[arr] (bench_bg.south) -- node[lbl, right=2pt] {Problem Code} (client_bg.north);
+
+% Client → Pipeline
+\draw[arr] (client_bg.south) -- node[lbl, right=2pt] {Prompt / Response} (pipeline_bg.north);
+
+% Pipeline → Knowledge (reads)
+\draw[arr] ([xshift=-0.4cm]pipeline_bg.south) --
+           node[lbl, right=2pt] {Spec / Hints} ([xshift=-0.4cm]know_bg.north);
+
+% Pipeline → Storage (writes)
+\draw[arr] ([xshift=0.4cm]pipeline_bg.south) to[out=-90, in=90]
+           node[lbl, right=3pt] {Kernel / Run} (storage_bg.north);
+
+% Knowledge → Client (gpu specs + patterns feed prompt builder)
+\draw[arr, color=green!60!black] (know_bg.east) to[out=0, in=270, looseness=0.6]
+     node[lbltiny, above right=0pt and 2pt] {} (promptbuilder.south);
+
+%% ============================================================
+%% External dependency arrows
+%% ============================================================
+% HuggingFace → problem_loader
+\draw[extarr] (hfdata.west) to[out=180, in=0] (loader.east);
+% OpenAI API → llm_client
+\draw[extarr] (openai.west) to[out=180, in=0] (llmclient.east);
+% vLLM → llm_client
+\draw[extarr] (vllm.west) to[out=180, in=0, looseness=0.8] (llmclient.east);
+% GPU → evaluator / runner
+\draw[extarr] (gpu.west) to[out=180, in=0, looseness=0.7] (runner.east);
+
+%% ============================================================
+%% State-machine annotation on orchestrator
+%% ============================================================
+\node[lbltiny, below=0.12cm of orchestrator, align=center, color=orange!70!black]
+    {GENERATE $\rightarrow$ EVALUATE\\$\rightarrow$ REFLECT $\rightarrow$ OPTIMIZE};
+
+%% ============================================================
+%% Section label: "External Systems"
+%% ============================================================
+\node[font=\small\bfseries\sffamily, color=gray!60, above=0.15cm of hfdata]
+    {External Systems};
+
+\end{tikzpicture}
+}
+\caption{제안 시스템의 전체 모듈 구조. CLI 레이어가 사용자 입력을 받아 Bench 레이어에서 KernelBench 문제를 로딩하고, Client 레이어가 프롬프트 구성 및 LLM 응답 파싱을 담당한다. Pipeline 레이어의 상태 머신(GENERATE $\to$ EVALUATE $\to$ REFLECT $\to$ OPTIMIZE)이 반복적 생성-평가 루프를 조율하며, Knowledge 레이어의 GPU 사양 및 Triton 패턴이 프롬프트 품질을 향상시킨다. 생성된 커널과 실험 결과는 Storage 레이어에 저장된다.}
+\label{fig:system_architecture}
+\end{figure*}

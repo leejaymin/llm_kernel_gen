@@ -1,0 +1,88 @@
+% Figure 3: Error Type Distribution by Model (Stacked Bar Chart)
+% 사용법: \input{figures/fig_error_distribution.tex}
+\begin{figure}[t]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}
+\begin{axis}[
+    ybar stacked,
+    bar width=18pt,
+    width=11cm,
+    height=7cm,
+    ymin=0, ymax=115,
+    ylabel={비율 (\%)},
+    ylabel style={font=\small\sffamily},
+    symbolic x coords={gpt-4o-mini, gpt-4o, gpt-5.2, gpt-5.2-pro},
+    xtick=data,
+    xticklabel style={font=\small\sffamily, rotate=0},
+    yticklabel style={font=\small\sffamily},
+    legend style={
+        at={(0.5,1.03)},
+        anchor=south,
+        legend columns=4,
+        font=\small\sffamily,
+        draw=none,
+        fill=none,
+    },
+    legend cell align={left},
+    nodes near coords={},
+    enlarge x limits=0.2,
+    grid=major,
+    grid style={dashed, gray!30},
+    area legend,
+]
+
+% Compile Error (Level 1 기준)
+\addplot+[ybar, fill=red!50!orange, draw=red!60!orange] coordinates {
+    (gpt-4o-mini, 71.8)
+    (gpt-4o, 45.7)
+    (gpt-5.2, 6.9)
+    (gpt-5.2-pro, 0)
+};
+
+% Value Mismatch
+\addplot+[ybar, fill=blue!40, draw=blue!50] coordinates {
+    (gpt-4o-mini, 20.0)
+    (gpt-4o, 37.0)
+    (gpt-5.2, 58.6)
+    (gpt-5.2-pro, 0)
+};
+
+% CUDA Error
+\addplot+[ybar, fill=green!40, draw=green!50] coordinates {
+    (gpt-4o-mini, 2.4)
+    (gpt-4o, 11.1)
+    (gpt-5.2, 1.7)
+    (gpt-5.2-pro, 0)
+};
+
+% Timeout
+\addplot+[ybar, fill=gray!50, draw=gray!60] coordinates {
+    (gpt-4o-mini, 2.4)
+    (gpt-4o, 0)
+    (gpt-5.2, 20.7)
+    (gpt-5.2-pro, 100)
+};
+
+\legend{Compile Error, Value Mismatch, CUDA Error, Timeout}
+
+% ===== 에러 전이 주석 (axis 내부, 각 바 위) =====
+\node[font=\tiny\sffamily, color=red!60, align=center, anchor=south]
+    at (axis cs:gpt-4o-mini, 100) {문법\\미숙};
+\node[font=\tiny\sffamily, color=blue!60, align=center, anchor=south]
+    at (axis cs:gpt-5.2, 100) {의미적\\병목};
+\node[font=\tiny\sffamily, color=gray!60, align=center, anchor=south]
+    at (axis cs:gpt-5.2-pro, 103) {실용적\\제약};
+
+\end{axis}
+
+% ===== 능력 수준 화살표 =====
+\draw[-{Stealth[length=5pt]}, thick, color=black!40]
+    (1.2, -0.8) -- (9.5, -0.8)
+    node[midway, below, font=\scriptsize\sffamily\itshape, color=black!50] {모델 능력 향상 $\longrightarrow$};
+
+\end{tikzpicture}
+}
+\caption{모델별 에러 유형 분포 (Level~1 기준). 모델 능력이 향상됨에 따라 컴파일 에러에서 값 불일치(value mismatch)로 지배적 에러 유형이 전이되는 패턴이 관찰된다. gpt-5.2-pro의 실패는 전량 타임아웃에 기인한다.}
+\label{fig:error_distribution}
+\end{figure}

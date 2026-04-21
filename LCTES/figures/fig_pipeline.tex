@@ -1,0 +1,95 @@
+% Figure 1: System Pipeline Overview
+% 사용법: \input{figures/fig_pipeline.tex}
+\begin{figure*}[t]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box/.style={rectangle, draw=black!70, fill=#1, rounded corners=3pt,
+                minimum height=1.0cm, minimum width=2.4cm, align=center,
+                font=\small\sffamily},
+    box/.default={blue!8},
+    databox/.style={rectangle, draw=black!50, fill=yellow!12, rounded corners=2pt,
+                    minimum height=0.8cm, minimum width=2.0cm, align=center,
+                    font=\small\ttfamily},
+    arr/.style={-{Stealth[length=6pt]}, thick, color=black!70},
+    darr/.style={-{Stealth[length=6pt]}, thick, color=red!60!black, dashed},
+    lbl/.style={font=\scriptsize\sffamily, color=black!60},
+]
+
+% ===== Input =====
+\node[databox] (input) {PyTorch\\Reference Code};
+
+% ===== Problem Loader =====
+\node[box=green!10, right=of input] (loader) {Problem\\Loader};
+
+% ===== Prompt Builder =====
+\node[box=orange!12, right=of loader] (prompt) {Prompt\\Builder};
+
+% ===== GPU Spec (above prompt) =====
+\node[databox, above=0.6cm of prompt] (gpuspec) {GPU Spec\\(Blackwell 96GB)};
+
+% ===== LLM Client =====
+\node[box=purple!12, right=of prompt] (llm) {LLM\\Client};
+
+% ===== API boxes above LLM =====
+\node[box=purple!6, above=0.8cm of llm, minimum width=5.5cm, minimum height=0.7cm] (apis) {
+    Chat Completions \quad|\quad Responses \quad|\quad Completions API
+};
+
+% ===== Response Parser =====
+\node[box=cyan!10, right=of llm] (parser) {Response\\Parser};
+
+% ===== Generated Code =====
+\node[databox, right=of parser] (gencode) {Triton\\Kernel Code};
+
+% ===== Evaluator =====
+\node[box=red!10, below=1.2cm of gencode] (eval) {Evaluator\\{\scriptsize (Subprocess)}};
+
+% ===== Reflector =====
+\node[box=red!10, left=of eval] (reflect) {Reflector\\{\scriptsize (Error Classifier)}};
+
+% ===== Result =====
+\node[databox, right=1.5cm of eval] (result) {Result\\{\scriptsize (Pass/Fail + Speedup)}};
+
+% ===== Arrows: main flow =====
+\draw[arr] (input) -- (loader);
+\draw[arr] (loader) -- (prompt);
+\draw[arr] (gpuspec) -- (prompt);
+\draw[arr] (prompt) -- (llm);
+\draw[arr] (llm) -- (parser);
+\draw[arr] (parser) -- (gencode);
+\draw[arr] (gencode) -- (eval);
+\draw[arr] (eval) -- (result);
+
+% API connection
+\draw[arr, color=purple!50] (apis) -- (llm);
+
+% ===== Feedback loop =====
+\draw[darr] (eval) -- node[lbl, above] {Fail} (reflect);
+\draw[darr] (reflect) -- ++(0, 1.4) -| node[lbl, near start, above] {Error Feedback} (prompt);
+
+% ===== Pass label =====
+\node[lbl, above=0.1cm of result] {Pass};
+
+% ===== Iteration label =====
+\node[lbl, below=0.15cm of reflect] {최대 $N$회 반복};
+
+% ===== Phase labels =====
+\node[font=\footnotesize\bfseries\sffamily, color=blue!60, above=0.15cm of loader] {Phase 1};
+\node[font=\footnotesize\bfseries\sffamily, color=orange!70, above=0.15cm of prompt] {Phase 2};
+\node[font=\footnotesize\bfseries\sffamily, color=purple!60, above=0.15cm of llm] {Phase 3};
+\node[font=\footnotesize\bfseries\sffamily, color=cyan!60!black, above=0.15cm of parser] {Phase 4};
+\node[font=\footnotesize\bfseries\sffamily, color=red!60, below right=0.05cm and -0.2cm of eval.south west] {Phase 5};
+
+% ===== Bounding box for CUDA isolation =====
+\begin{scope}[on background layer]
+\node[draw=red!40, dashed, fill=red!3, rounded corners=5pt,
+      fit=(eval), inner sep=8pt, label={[font=\tiny\sffamily, color=red!50]above right:CUDA Isolation}] {};
+\end{scope}
+
+\end{tikzpicture}
+}
+\caption{LLM 기반 Triton GPU 커널 자동 생성 시스템의 전체 파이프라인. PyTorch 레퍼런스 코드로부터 프롬프트를 구성하고, LLM이 Triton 커널을 생성하며, 평가 실패 시 에러 피드백을 통해 반복적으로 개선한다. 각 커널 평가는 CUDA 에러 격리를 위해 독립적인 서브프로세스에서 수행된다.}
+\label{fig:pipeline}
+\end{figure*}

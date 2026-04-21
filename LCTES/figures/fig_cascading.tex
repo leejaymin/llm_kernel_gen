@@ -1,0 +1,87 @@
+% Figure 2: Multi-Model Cascading Strategy
+% 사용법: \input{figures/fig_cascading.tex}
+\begin{figure}[t]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=0.8cm and 1.2cm,
+    modelbox/.style={rectangle, draw=black!70, fill=#1, rounded corners=4pt,
+                     minimum height=1.1cm, minimum width=3.0cm, align=center,
+                     font=\small\bfseries\sffamily},
+    resultbox/.style={rectangle, draw=#1!70, fill=#1!10, rounded corners=3pt,
+                      minimum height=0.7cm, minimum width=2.0cm, align=center,
+                      font=\small\sffamily},
+    probbox/.style={rectangle, draw=black!40, fill=gray!8, rounded corners=2pt,
+                    minimum height=0.7cm, minimum width=2.2cm, align=center,
+                    font=\small\sffamily},
+    arr/.style={-{Stealth[length=6pt]}, thick, color=black!60},
+    garr/.style={-{Stealth[length=6pt]}, thick, color=green!50!black},
+    rarr/.style={-{Stealth[length=6pt]}, thick, color=red!50!black},
+    lbl/.style={font=\scriptsize\sffamily},
+]
+
+% ===== 전체 문제 =====
+\node[probbox, minimum width=3.5cm] (all) {전체 250문제};
+
+% ===== Phase 1: gpt-4o =====
+\node[modelbox=blue!15, below=1.0cm of all] (m1) {Phase 1\\gpt-4o};
+
+% ===== Phase 1 결과 =====
+\node[resultbox=green, right=2.5cm of m1, yshift=0.5cm] (p1ok) {25문제 해결};
+\node[resultbox=red, right=2.5cm of m1, yshift=-0.5cm] (p1fail) {225문제 실패};
+
+% ===== Phase 2: gpt-5.2 =====
+\node[modelbox=orange!20, below=1.5cm of m1] (m2) {Phase 2\\gpt-5.2};
+
+% ===== Phase 2 결과 =====
+\node[resultbox=green, right=2.5cm of m2, yshift=0.5cm] (p2ok) {+36문제 해결};
+\node[resultbox=red, right=2.5cm of m2, yshift=-0.5cm] (p2fail) {189문제 실패};
+
+% ===== Phase 3: gpt-5.2-pro =====
+\node[modelbox=red!15, below=1.5cm of m2] (m3) {Phase 3\\gpt-5.2-pro};
+
+% ===== Phase 3 결과 =====
+\node[resultbox=green, right=2.5cm of m3, yshift=0.5cm] (p3ok) {+1문제 해결};
+\node[resultbox=red, right=2.5cm of m3, yshift=-0.5cm] (p3fail) {188문제 실패};
+
+% ===== 최종 합계 =====
+\node[rectangle, draw=green!60!black, fill=green!10, rounded corners=5pt,
+      minimum height=1.0cm, minimum width=3.5cm, align=center,
+      font=\normalsize\bfseries\sffamily,
+      below=1.0cm of m3] (total) {최종: 62/250\\(24.8\%)};
+
+% ===== Arrows =====
+\draw[arr] (all) -- (m1);
+\draw[garr] (m1) -- node[lbl, above, sloped] {Pass} (p1ok);
+\draw[rarr] (m1) -- node[lbl, below, sloped] {Fail} (p1fail);
+
+% 실패 → Phase 2
+\draw[rarr, dashed] (p1fail.south) |- ++(0,-0.3) -| (m2.north east);
+
+\draw[garr] (m2) -- node[lbl, above, sloped] {Pass} (p2ok);
+\draw[rarr] (m2) -- node[lbl, below, sloped] {Fail} (p2fail);
+
+% 실패 → Phase 3
+\draw[rarr, dashed] (p2fail.south) |- ++(0,-0.3) -| (m3.north east);
+
+\draw[garr] (m3) -- node[lbl, above, sloped] {Pass} (p3ok);
+\draw[rarr] (m3) -- node[lbl, below, sloped] {Fail} (p3fail);
+
+% 합계 연결 (간결한 단일 화살표)
+\draw[arr] (m3) -- (total);
+
+% ===== 비용 효율 라벨 =====
+\node[font=\scriptsize\sffamily, color=blue!60, left=0.3cm of m1] {비용: \$};
+\node[font=\scriptsize\sffamily, color=orange!70, left=0.3cm of m2] {비용: \$\$};
+\node[font=\scriptsize\sffamily, color=red!60, left=0.3cm of m3] {비용: \$\$\$\$};
+
+% ===== 향상률 표시 =====
+\node[font=\scriptsize\bfseries\sffamily, color=green!50!black, right=0.1cm of p1ok] {10.0\%};
+\node[font=\scriptsize\bfseries\sffamily, color=green!50!black, right=0.1cm of p2ok] {$\Rightarrow$ 24.4\%};
+\node[font=\scriptsize\bfseries\sffamily, color=gray!60, right=0.1cm of p3ok] {$\Rightarrow$ 24.8\%};
+
+\end{tikzpicture}
+}
+\caption{다중 모델 캐스케이딩 전략. 각 단계에서 이전 단계의 실패 문제만을 대상으로 상위 모델을 적용한다. gpt-4o$\rightarrow$gpt-5.2 단계에서 2.44배의 성능 향상이 달성되며, gpt-5.2-pro 추가의 비용 대비 효과는 미미하다.}
+\label{fig:cascading}
+\end{figure}

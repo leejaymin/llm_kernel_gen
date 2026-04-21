@@ -95,6 +95,13 @@ class LLMClient:
 
         # Cache for models that require completions API (non-chat models)
         self._non_chat_models: set = set()
+        # Cache for models that require Responses API (not chat, not completions)
+        # Pre-populate known Responses-only models to avoid slow fallback chain
+        self._responses_only_models: set = set()
+        _known_responses_models = {"gpt-5.2-pro", "o1", "o1-pro", "o3", "o3-pro"}
+        resolved_name = self._resolve_model_name(model)
+        if model in _known_responses_models or resolved_name in _known_responses_models:
+            self._responses_only_models.add(resolved_name)
 
         # Initialize OpenAI clients
         self.client = OpenAI(
@@ -162,6 +169,23 @@ class LLMClient:
             }
 
         return {"max_tokens": 8192, "temperature": 0.3}
+
+    @staticmethod
+    def _is_responses_only_error(error: Exception) -> bool:
+        """
+        Check if the error indicates the model only supports the Responses API.
+
+        Args:
+            error: The API error to check
+
+        Returns:
+            True if the model needs the Responses API
+        """
+        error_msg = str(error).lower()
+        return (
+            "not supported" in error_msg
+            and ("v1/completions" in error_msg or "completions" in error_msg)
+        )
 
     @staticmethod
     def _is_non_chat_error(error: Exception) -> bool:
@@ -261,7 +285,37 @@ class LLMClient:
                     error=f"Completions API failed after {self.max_retries} retries: {last_error}",
                 )
 
+            except (NotFoundError, APIError) as e:
+                # Model doesn't support completions either → try Responses API
+                if self._is_responses_only_error(e):
+                    self._responses_only_models.add(model_name)
+                    return self._generate_responses(
+                        prompt=prompt,
+                        model_name=model_name,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        system_message=system_message,
+                    )
+                return GenerationResult(
+                    code="",
+                    raw_response="",
+                    tokens_used=0,
+                    latency_ms=0.0,
+                    model_name=model_name,
+                    error=f"Completions API error: {str(e)}",
+                )
+
             except Exception as e:
+                # Check if this is a responses-only model error
+                if self._is_responses_only_error(e):
+                    self._responses_only_models.add(model_name)
+                    return self._generate_responses(
+                        prompt=prompt,
+                        model_name=model_name,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        system_message=system_message,
+                    )
                 return GenerationResult(
                     code="",
                     raw_response="",
@@ -278,6 +332,177 @@ class LLMClient:
             latency_ms=0.0,
             model_name=model_name,
             error=f"Completions API failed after {self.max_retries} retries",
+        )
+
+    def _generate_responses(
+        self,
+        prompt: str,
+        model_name: str,
+        temperature: float,
+        max_tokens: int,
+        system_message: Optional[str] = None,
+    ) -> GenerationResult:
+        """
+        Generate using the Responses API (v1/responses) for models like gpt-5.2-pro.
+
+        Args:
+            prompt: Input prompt
+            model_name: Resolved model name
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens to generate
+            system_message: Optional system instructions
+
+        Returns:
+            GenerationResult with code and metadata
+        """
+        last_error = None
+
+        for attempt in range(self.max_retries):
+            try:
+                start_time = time.time()
+
+                kwargs = {
+                    "model": model_name,
+                    "input": prompt,
+                    "max_output_tokens": max_tokens,
+                }
+                if system_message:
+                    kwargs["instructions"] = system_message
+                # Reasoning models (gpt-5.2-pro, o1, o3) don't support temperature
+                # Skip temperature for these models to avoid API errors
+
+                response = self.client.responses.create(**kwargs)
+
+                latency_ms = (time.time() - start_time) * 1000
+
+                code = response.output_text or ""
+
+                tokens_used = 0
+                if hasattr(response, 'usage') and response.usage:
+                    tokens_used = getattr(response.usage, 'total_tokens', 0)
+
+                return GenerationResult(
+                    code=code,
+                    raw_response=code,
+                    tokens_used=tokens_used,
+                    latency_ms=latency_ms,
+                    model_name=model_name,
+                    finish_reason="stop",
+                )
+
+            except (APIConnectionError, APITimeoutError, RateLimitError) as e:
+                last_error = str(e)
+                if attempt < self.max_retries - 1:
+                    delay = self._exponential_backoff(attempt)
+                    time.sleep(delay)
+                    continue
+
+                return GenerationResult(
+                    code="",
+                    raw_response="",
+                    tokens_used=0,
+                    latency_ms=0.0,
+                    model_name=model_name,
+                    error=f"Responses API failed after {self.max_retries} retries: {last_error}",
+                )
+
+            except Exception as e:
+                return GenerationResult(
+                    code="",
+                    raw_response="",
+                    tokens_used=0,
+                    latency_ms=0.0,
+                    model_name=model_name,
+                    error=f"Responses API error: {str(e)}",
+                )
+
+        return GenerationResult(
+            code="",
+            raw_response="",
+            tokens_used=0,
+            latency_ms=0.0,
+            model_name=model_name,
+            error=f"Responses API failed after {self.max_retries} retries",
+        )
+
+    async def _agenerate_responses(
+        self,
+        prompt: str,
+        model_name: str,
+        temperature: float,
+        max_tokens: int,
+        system_message: Optional[str] = None,
+    ) -> GenerationResult:
+        """
+        Async generate using the Responses API for models like gpt-5.2-pro.
+        """
+        last_error = None
+
+        for attempt in range(self.max_retries):
+            try:
+                start_time = time.time()
+
+                kwargs = {
+                    "model": model_name,
+                    "input": prompt,
+                    "max_output_tokens": max_tokens,
+                }
+                if system_message:
+                    kwargs["instructions"] = system_message
+                # Skip temperature for reasoning models
+
+                response = await self.async_client.responses.create(**kwargs)
+
+                latency_ms = (time.time() - start_time) * 1000
+
+                code = response.output_text or ""
+
+                tokens_used = 0
+                if hasattr(response, 'usage') and response.usage:
+                    tokens_used = getattr(response.usage, 'total_tokens', 0)
+
+                return GenerationResult(
+                    code=code,
+                    raw_response=code,
+                    tokens_used=tokens_used,
+                    latency_ms=latency_ms,
+                    model_name=model_name,
+                    finish_reason="stop",
+                )
+
+            except (APIConnectionError, APITimeoutError, RateLimitError) as e:
+                last_error = str(e)
+                if attempt < self.max_retries - 1:
+                    delay = self._exponential_backoff(attempt)
+                    await asyncio.sleep(delay)
+                    continue
+
+                return GenerationResult(
+                    code="",
+                    raw_response="",
+                    tokens_used=0,
+                    latency_ms=0.0,
+                    model_name=model_name,
+                    error=f"Responses API failed after {self.max_retries} retries: {last_error}",
+                )
+
+            except Exception as e:
+                return GenerationResult(
+                    code="",
+                    raw_response="",
+                    tokens_used=0,
+                    latency_ms=0.0,
+                    model_name=model_name,
+                    error=f"Responses API error: {str(e)}",
+                )
+
+        return GenerationResult(
+            code="",
+            raw_response="",
+            tokens_used=0,
+            latency_ms=0.0,
+            model_name=model_name,
+            error=f"Responses API failed after {self.max_retries} retries",
         )
 
     async def _agenerate_completions(
@@ -425,6 +650,16 @@ class LLMClient:
             temperature = model_params.get("temperature", 0.3)
         if max_tokens is None:
             max_tokens = model_params.get("max_tokens", 8192)
+
+        # If model is known to need Responses API, go directly
+        if model_name in self._responses_only_models:
+            return self._generate_responses(
+                prompt=prompt,
+                model_name=model_name,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                system_message=system_message,
+            )
 
         # If model is known to be non-chat, go directly to completions API
         if model_name in self._non_chat_models:
@@ -584,6 +819,16 @@ class LLMClient:
             temperature = model_params.get("temperature", 0.3)
         if max_tokens is None:
             max_tokens = model_params.get("max_tokens", 8192)
+
+        # If model is known to need Responses API, go directly
+        if model_name in self._responses_only_models:
+            return await self._agenerate_responses(
+                prompt=prompt,
+                model_name=model_name,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                system_message=system_message,
+            )
 
         # If model is known to be non-chat, go directly to completions API
         if model_name in self._non_chat_models:
