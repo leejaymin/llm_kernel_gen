@@ -38,3 +38,22 @@ Thumbs.db
 
 # omc state
 .omc/
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.out
+*.log
+comment.cut
+missfont.log
+
+# macOS zip artifacts
+__MACOSX/
+*.zip
+
+# Secrets (API keys)
+examples/setup_mindlogic.sh
+
+# Misc
+;

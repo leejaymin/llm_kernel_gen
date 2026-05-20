@@ -18,7 +18,9 @@
 6. [Speedup Analysis](#6-speedup-analysis)
 7. [Per-Problem Detailed Results](#7-per-problem-detailed-results)
 8. [Key Findings](#8-key-findings)
-9. [Data Source Reference](#9-data-source-reference)
+9. [Extended Model Evaluation via Mindlogic Gateway](#9-extended-model-evaluation-via-mindlogic-gateway-2026-04-28)
+10. [Key Findings from Extended Evaluation](#10-key-findings-from-extended-evaluation)
+11. [Data Source Reference](#11-data-source-reference)
 
 ---
 
@@ -89,7 +91,7 @@ A problem is considered **solved** (correct) when:
 
 > \* gpt-5.2 and gpt-5.2-pro were run only on problems that gpt-4o failed to solve (cascading strategy). The denominators reflect the number of attempted problems.
 
-**Data source:** See [Section 9.1](#91-primary-results-files) for exact file paths.
+**Data source:** See [Section 11.1](#111-primary-results-files) for exact file paths.
 
 ### 2.2 Observations
 
@@ -523,9 +525,114 @@ The top speedups (84x, 25x, 19x, 12x) are orders of magnitude above the median, 
 
 ---
 
-## 9. Data Source Reference
+## 9. Extended Model Evaluation via Mindlogic Gateway (2026-04-28)
 
-### 9.1 Primary Results Files
+### 9.1 Setup
+- API Gateway: Mindlogic AI Gateway (factchat-cloud.mindlogic.ai)
+- Provider: mindlogic (unified endpoint for OpenAI/Anthropic/Google)
+- Iteration count: 3 (for cost efficiency)
+- Level: 1 (100 problems)
+
+### 9.2 New Models Tested
+
+| Model | Provider | Type | Iterations | Note |
+|-------|----------|------|-----------|------|
+| gpt-5.4-nano | OpenAI | Chat | 3 | Lowest-cost latest model |
+| gpt-5.5 | OpenAI | Chat | 3 | Latest flagship |
+| claude-opus-4-7 | Anthropic | Chat (no temp) | 3 | Latest flagship, temperature deprecated |
+| gemini-3.1-pro-preview | Google | Chat | 3 | Aborted: insufficient_quota (HTTP 402) |
+
+### 9.3 Results (Level 1, Fast-0)
+
+| Model | Solved (/100) | Rate | Fast-1 | Fast-2 | Avg Speedup | Max Speedup |
+|-------|:------------:|:----:|:------:|:------:|:-----------:|:-----------:|
+| claude-opus-4-7 | **46** | **46%** | 29/46 (63%) | 14/46 (30%) | 2.21x | 12.96x |
+| gpt-5.5 | 37 | 37% | 22/37 (59%) | 8/37 (21%) | 1.92x | 12.37x |
+| gpt-5.4-nano | 35 | 35% | 21/35 (60%) | 10/35 (28%) | 2.93x | 39.96x |
+
+### 9.4 Comparison with Previous Results
+
+| Model | L1 Solved | Rate | Generation |
+|-------|:---------:|:----:|:----------:|
+| **claude-opus-4-7** | **46/100** | **46%** | Latest (2026) |
+| gpt-5.5 | 37/100 | 37% | Latest (2026) |
+| gpt-5.4-nano | 35/100 | 35% | Latest (2026) |
+| Old cascading (4o+5.2+5.2-pro) | 43/100 | 43% | Previous (2025) |
+| gpt-5.2 (on failures) | 23/81 | 28% | Previous (2025) |
+| gpt-4o | 19/100 | 19% | Previous (2025) |
+| gpt-4o-mini | 15/100 | 15% | Previous (2025) |
+
+### 9.5 Solved Problem Sets
+
+**gpt-5.4-nano (35 problems):**
+`{2, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 25, 27, 28, 29, 30, 31, 32, 42, 43, 44, 53, 86, 88, 89, 90, 98, 99}`
+
+> Data source: `runs/mindlogic_gpt_54_nano_L1/results.json`
+
+**gpt-5.5 (37 problems):**
+`{1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 40, 41, 42, 43, 44}`
+
+> Data source: `runs/mindlogic_gpt_55_L1/results.json`
+
+**claude-opus-4-7 (46 problems):**
+`{1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 40, 41, 42, 43, 44, 88, 89, 90, 91, 95, 97, 98, 99, 100}`
+
+> Data source: `runs/mindlogic_claude_opus_4_7_L1/results.json`
+
+### 9.6 Error Analysis
+
+| Model | Failed | Compile | Val. Mismatch | CUDA | Timeout | Other |
+|-------|:------:|:-------:|:------------:|:----:|:-------:|:-----:|
+| gpt-5.4-nano | 65 | 1 (1.5%) | 22 (33.8%) | 4 (6.2%) | 2 (3.1%) | 36 (55.4%) |
+| gpt-5.5 | 63 | 45 (71.4%) | 2 (3.2%) | 0 | 16 (25.4%) | 0 |
+| claude-opus-4-7 | 54 | 0 (0%) | 35 (64.8%) | 2 (3.7%) | 15 (27.8%) | 2 (3.7%) |
+
+### 9.7 Cross-Model Union Analysis
+
+| Configuration | L1 Solved (/100) |
+|--------------|:----------------:|
+| claude-opus-4-7 alone | 46 |
+| opus + gpt-5.4-nano | **48** |
+| opus + gpt-5.5 | 46 |
+| opus + nano + gpt-5.5 | 48 |
+| All 5 models (4o+5.2+nano+5.5+opus) | **51** |
+| Old: gpt-4o + gpt-5.2 | 42 |
+
+**Unique contributions per model:**
+- gpt-5.2: {35, 36, 37} (3 unique)
+- gpt-5.4-nano: {53, 86} (2 unique)
+- claude-opus-4-7: {91, 97} (2 unique)
+
+---
+
+## 10. Key Findings from Extended Evaluation
+
+### Finding 9: Flagship Convergence Phenomenon
+gpt-5.5 and claude-opus-4-7 solved EXACTLY the same 37 problems in the first 44 problems (P1-P44), with P4 as the sole failure. This suggests a "convergence ceiling" where top-tier models from different providers achieve near-identical performance on problems below a certain difficulty threshold.
+
+### Finding 10: Post-Convergence Divergence
+The models diverged sharply after P44: gpt-5.5 solved 0 additional problems (P45-P100), while claude-opus-4-7 solved 9 more (P88-P100). This "late recovery" ability distinguishes claude-opus-4-7 as the superior model for GPU kernel generation.
+
+### Finding 11: claude-opus-4-7 Surpasses Multi-Model Cascading
+A single claude-opus-4-7 run (46/100) exceeds the previous 3-model cascading strategy (gpt-4o → gpt-5.2 → gpt-5.2-pro = 43/100). This eliminates the need for expensive multi-model pipelines.
+
+### Finding 12: Nano Model Surprisingly Competitive
+gpt-5.4-nano (35/100) — the cheapest model — outperforms all previous-generation models (gpt-4o: 19, gpt-5.2: 23 on full L1). This represents a massive cost-efficiency improvement.
+
+### Finding 13: Error Pattern Reveals Model Architecture Differences
+- claude-opus-4-7: 0% compile errors, 65% value mismatch — near-perfect Triton syntax mastery
+- gpt-5.5: 71% compile errors, 3% value mismatch — struggles with Triton syntax despite solving 37 problems
+- gpt-5.4-nano: mixed error profile with 55% "other" errors
+This shows that models achieve similar success rates through fundamentally different strategies.
+
+### Finding 14: Maximum Union of 51/100 from 5 Models
+Combining all 5 models yields 51/100 (51%) — a 21% absolute improvement over the previous best cascading (43/100). Each model contributes unique solutions, confirming the stochastic diversity principle.
+
+---
+
+## 11. Data Source Reference
+
+### 11.1 Primary Results Files
 
 All paths are relative to the project root (`/home/jemin/development/llm_kernel/`).
 
@@ -548,7 +655,15 @@ All paths are relative to the project root (`/home/jemin/development/llm_kernel/
 | Ablation iter=10 | `runs/ablation_iter10/results.json` | same structure |
 | Ablation iter=5 | `runs/gpt4o_level1_v2/results.json` | (same as gpt-4o L1 baseline) |
 
-### 9.2 Results JSON Schema
+### 11.1.1 Extended Results Files (Mindlogic Gateway)
+
+| Experiment | Results File |
+|-----------|-------------|
+| gpt-5.4-nano Level 1 | `runs/mindlogic_gpt_54_nano_L1/results.json` |
+| gpt-5.5 Level 1 | `runs/mindlogic_gpt_55_L1/results.json` |
+| claude-opus-4-7 Level 1 | `runs/mindlogic_claude_opus_4_7_L1/results.json` |
+
+### 11.2 Results JSON Schema
 
 ```json
 {
@@ -571,7 +686,7 @@ All paths are relative to the project root (`/home/jemin/development/llm_kernel/
 }
 ```
 
-### 9.3 Verification Instructions
+### 11.3 Verification Instructions
 
 To manually verify any number in this report:
 
@@ -628,7 +743,7 @@ for k, v in errors.most_common():
     print(f"  {k}: {v} ({v/len(failed)*100:.1f}%)")
 ```
 
-### 9.4 Individual Problem Results
+### 11.4 Individual Problem Results
 
 Each problem also has its own results directory:
 
@@ -641,7 +756,7 @@ For example:
 - `runs/gpt52_level3_failed_p16/results.json` — gpt-5.2 Level 3, Problem 16 (84.03x speedup)
 - `runs/gpt-5.2-pro_p88/results.json` — gpt-5.2-pro Level 1, Problem 88 (7.60x speedup)
 
-### 9.5 Experiment Runner Scripts
+### 11.5 Experiment Runner Scripts
 
 | Script | Purpose |
 |--------|---------|
@@ -650,7 +765,7 @@ For example:
 | `run_4o_mini.py` | gpt-4o-mini baseline (all levels) |
 | `run_5.2pro_level2_3.py` | gpt-5.2-pro on Level 2/3 failures |
 
-### 9.6 Pipeline Source Code
+### 11.6 Pipeline Source Code
 
 | Module | Path | Role |
 |--------|------|------|

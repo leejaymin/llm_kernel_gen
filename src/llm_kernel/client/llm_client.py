@@ -61,7 +61,8 @@ class LLMClient:
             timeout: Request timeout in seconds
             max_retries: Maximum retry attempts with exponential backoff
             config_path: Path to models.yaml config file
-            provider: Provider type - "vllm" for local server or "openai" for OpenAI API
+            provider: Provider type - "vllm" for local server, "openai" for OpenAI API,
+                      or "mindlogic" for Mindlogic AI Gateway (supports OpenAI/Anthropic/Google models)
         """
         self.provider = provider.lower()
         self.model = model
@@ -69,7 +70,18 @@ class LLMClient:
         self.max_retries = max_retries
 
         # Configure provider-specific settings
-        if self.provider == "openai":
+        if self.provider == "mindlogic":
+            # Mindlogic AI Gateway — unified endpoint for OpenAI/Anthropic/Google models
+            self.base_url = "https://factchat-cloud.mindlogic.ai/v1/gateway"
+            if api_key == "EMPTY" or not api_key:
+                api_key = os.getenv("MINDLOGIC_API_KEY", "")
+                if not api_key:
+                    raise ValueError(
+                        "Mindlogic API key required. Set MINDLOGIC_API_KEY environment variable "
+                        "or pass api_key parameter."
+                    )
+            self.api_key = api_key
+        elif self.provider == "openai":
             # OpenAI API configuration
             self.base_url = "https://api.openai.com/v1"
             # Try to get API key from parameter, environment, or raise error
@@ -102,6 +114,13 @@ class LLMClient:
         resolved_name = self._resolve_model_name(model)
         if model in _known_responses_models or resolved_name in _known_responses_models:
             self._responses_only_models.add(resolved_name)
+
+        # Models that do not support the temperature parameter
+        self._no_temperature_models: set = set()
+        _known_no_temp = {"claude-opus-4-7", "claude-opus-4-6", "claude-opus-4-5-20251101",
+                          "gpt-5.2-pro", "o1", "o1-pro", "o3", "o3-pro"}
+        if model in _known_no_temp or resolved_name in _known_no_temp:
+            self._no_temperature_models.add(resolved_name)
 
         # Initialize OpenAI clients
         self.client = OpenAI(
@@ -692,12 +711,17 @@ class LLMClient:
                     else {"max_tokens": max_tokens}
                 )
 
+                # Some models (e.g. claude-opus-4-7) don't support temperature
+                sampling_params = {}
+                if model_name not in self._no_temperature_models:
+                    sampling_params["temperature"] = temperature
+                    sampling_params["top_p"] = top_p
+
                 response = self.client.chat.completions.create(
                     model=model_name,
                     messages=messages,
-                    temperature=temperature,
-                    top_p=top_p,
                     stop=stop,
+                    **sampling_params,
                     **token_param,
                 )
 
@@ -741,6 +765,13 @@ class LLMClient:
                 )
 
             except (NotFoundError, APIError) as e:
+                error_msg = str(e).lower()
+
+                # Check if temperature is not supported → retry without it
+                if "temperature" in error_msg and ("deprecated" in error_msg or "not supported" in error_msg):
+                    self._no_temperature_models.add(model_name)
+                    continue  # Retry — next attempt will skip temperature
+
                 # Check if this is a non-chat model error → fallback to completions API
                 if self._is_non_chat_error(e):
                     self._non_chat_models.add(model_name)

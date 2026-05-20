@@ -94,7 +94,7 @@ def run(
     run_name: Optional[str] = typer.Option(None, "--name", help="Run name for results"),
     max_workers: int = typer.Option(4, "--workers", "-w", help="Parallel workers"),
     base_url: str = typer.Option("http://localhost:8000/v1", "--url", help="LLM server URL"),
-    provider: str = typer.Option("vllm", "--provider", help="LLM provider: vllm (local) or openai (commercial API)"),
+    provider: str = typer.Option("vllm", "--provider", help="LLM provider: vllm (local), openai, or mindlogic (gateway)"),
     openai_api_key: Optional[str] = typer.Option(None, "--openai-api-key", help="OpenAI API key (alternative to OPENAI_API_KEY env var)"),
     output_dir: str = typer.Option("runs", "--output", "-o", help="Output directory for results"),
 ):
@@ -140,9 +140,9 @@ def run(
         system_prompt = prompt_builder.build_system_prompt()
 
         # Initialize LLM client with provider-specific settings
-        if provider == "openai":
+        if provider in ("openai", "mindlogic"):
             llm_client = LLMClient(
-                provider="openai",
+                provider=provider,
                 model=model,
                 api_key=openai_api_key or "",  # Will use env var if not provided
                 timeout=120.0,
@@ -165,8 +165,8 @@ def run(
 
         console.print(f"[green]✓ GPU: {env_info['gpu_name']} ({env_info['compute_capability']})[/green]")
 
-        # Check LLM server health (skip for OpenAI — always available)
-        if provider != "openai":
+        # Check LLM server health (skip for cloud APIs — always available)
+        if provider not in ("openai", "mindlogic"):
             if not llm_client.health_check():
                 console.print(f"[red]Error: LLM server not responding at {base_url}[/red]")
                 console.print("[yellow]Start server with: llm-kernel server start[/yellow]")
