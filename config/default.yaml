@@ -37,6 +37,29 @@ pipeline:
   correctness_tolerance: 1.0e-02
   timeout_seconds: 300
 
+# Profiling: feed measured kernel bottlenecks back into the optimize loop.
+profiling:
+  enabled: true
+  backend: "auto"              # auto | ncu | roofline | off
+                               #   auto: try ncu, fall back to roofline
+                               #   ncu : Nsight Compute hardware counters
+                               #         (needs GPU-counter permission:
+                               #          NVreg_RestrictProfilingToAdminUsers=0
+                               #          or run as root; else ERR_NVGPUCTRPERM)
+                               #   roofline: analytical, no admin required
+  ncu_path: "/home/jemin/miniforge3/nsight-compute-2025.3.1/ncu"
+  ncu_timeout_s: 180
+  warmup: 5
+  timed: 50
+
+# Skill memory: AdaExplore-style cross-problem failure-driven adaptation.
+# Distills compile/runtime/value-mismatch failures into persistent
+# "You cannot ..." rules and injects the top ones into the generation prompt.
+skill_memory:
+  enabled: false                 # turn on to accumulate + inject learned rules
+  path: "skill_memory_store.txt"
+  max_inject: 15
+
 # KernelBench
 kernelbench:
   dataset_src: "huggingface"

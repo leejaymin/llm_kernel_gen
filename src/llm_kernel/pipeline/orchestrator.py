@@ -21,6 +21,8 @@ from llm_kernel.pipeline.generator import KernelGenerator, GenerationOutput
 from llm_kernel.pipeline.evaluator import KernelEvaluator, EvalResult
 from llm_kernel.pipeline.reflector import Reflector, Feedback
 from llm_kernel.pipeline.optimizer import PerformanceOptimizer
+from llm_kernel.profile import KernelProfiler, ProfilerConfig
+from llm_kernel.knowledge.skill_memory import SkillMemory, RULE_EXTRACTION_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -121,13 +123,17 @@ class PipelineOrchestrator:
                 timeout=timeout,
             )
         else:
-            # vLLM (local server) configuration
+            # vLLM (local server) or mindlogic gateway. Pass the provider
+            # through as-is so e.g. "mindlogic" is not silently forced to
+            # "vllm" (which would route API models to the local vLLM server
+            # and 404). api_key "EMPTY" lets LLMClient fall back to the
+            # provider's env var (MINDLOGIC_API_KEY / OPENAI_API_KEY).
             self.llm_client = LLMClient(
                 base_url=llm_cfg.get("base_url", "http://localhost:8000/v1"),
                 api_key=llm_cfg.get("api_key", "EMPTY"),
                 model=llm_cfg.get("default_model", "Qwen/Qwen2.5-Coder-32B-Instruct"),
                 timeout=float(llm_cfg.get("timeout", 180)),
-                provider="vllm",
+                provider=provider,
             )
 
         # ----- Prompt builder & response parser -----
@@ -160,10 +166,43 @@ class PipelineOrchestrator:
         self.reflector = Reflector()
         self.optimizer = PerformanceOptimizer(gpu_spec=self.gpu_spec)
 
+        # ----- Profiler (ncu with roofline fallback) -----
+        prof_cfg = config.get("profiling", {})
+        self.profiler = KernelProfiler(
+            gpu_spec=self.gpu_spec,
+            config=ProfilerConfig(
+                enabled=prof_cfg.get("enabled", True),
+                backend=prof_cfg.get("backend", "auto"),
+                ncu_path=prof_cfg.get("ncu_path", "ncu"),
+                ncu_timeout_s=int(prof_cfg.get("ncu_timeout_s", 180)),
+                warmup=int(prof_cfg.get("warmup", 5)),
+                timed=int(prof_cfg.get("timed", 50)),
+            ),
+        )
+
         # ----- Pipeline parameters -----
         self.max_iterations: int = pipe_cfg.get("max_iterations", 5)
         self.speedup_threshold: float = float(pipe_cfg.get("speedup_threshold", 1.0))
         self.strategy: str = pipe_cfg.get("strategy", "iterative")
+        # Context-reset policy: when the refinement loop fails to reach a
+        # correct kernel after `reset_after` consecutive attempts, the accrued
+        # history (prev code + error feedback) is treated as a poisoned context
+        # that keeps steering the model into the same dead end. We then discard
+        # it and restart from a fresh generation (clean slate), up to
+        # `max_context_resets` times.
+        self.reset_after: int = pipe_cfg.get("reset_after", 3)
+        self.max_context_resets: int = pipe_cfg.get("max_context_resets", 2)
+
+        # Cross-problem skill memory (AdaExplore-style). Distills failures into
+        # persistent "You cannot ..." rules injected into the generation prompt.
+        sk_cfg = config.get("skill_memory", {})
+        self.skill_memory: Optional[SkillMemory] = None
+        if sk_cfg.get("enabled", False):
+            self.skill_memory = SkillMemory(
+                sk_cfg.get("path", "skill_memory_store.txt"),
+                max_inject=int(sk_cfg.get("max_inject", 15)),
+            )
+            logger.info("Skill memory enabled: %d rules loaded", len(self.skill_memory))
 
         # ----- Execution -----
         exec_cfg = config.get("execution", {})
@@ -202,7 +241,13 @@ class PipelineOrchestrator:
         current_code: Optional[str] = None
         current_eval: Optional[EvalResult] = None
         current_feedback: Optional[Feedback] = None
+        current_profile: Optional[dict] = None
         iteration = 0
+
+        # Context-reset bookkeeping (see __init__ for the policy).
+        refine_streak = 0      # consecutive refinements that stayed incorrect
+        resets_done = 0
+        fresh_start = False    # force the next GENERATE to ignore prior context
 
         while state not in (_State.COMPLETE, _State.FAILED):
             # ----------------------------------------------------------
@@ -215,21 +260,66 @@ class PipelineOrchestrator:
                     state = _State.FAILED
                     continue
 
+                # Context-reset: if refinement has been stuck (incorrect for
+                # `reset_after` consecutive attempts), the accumulated context is
+                # likely poisoned. Discard it and regenerate from scratch.
+                if (refine_streak >= self.reset_after
+                        and resets_done < self.max_context_resets):
+                    resets_done += 1
+                    logger.info(
+                        "%sContext RESET #%d (stuck for %d attempts) — discarding "
+                        "prior code/feedback, regenerating from scratch",
+                        pid_tag, resets_done, refine_streak,
+                    )
+                    current_code = None
+                    current_feedback = None
+                    refine_streak = 0
+                    fresh_start = True
+
                 logger.info("%sIteration %d: GENERATE", pid_tag, iteration)
 
-                if iteration == 1:
-                    # Initial generation
+                if iteration == 1 or fresh_start:
+                    # Initial / fresh-restart generation (no prior context).
+                    fresh_start = False
                     gen_output: GenerationOutput = self.generator.generate(
                         pytorch_code=pytorch_code,
                         operation_desc=operation_desc,
+                        skill_memory=(
+                            self.skill_memory.format_for_prompt()
+                            if self.skill_memory else ""
+                        ),
                     )
                 else:
                     # Refinement generation using feedback
                     assert current_feedback is not None
                     feedback_text = self._format_feedback(current_feedback)
 
+                    # Failure memory: accumulate ALL past failed attempts so the
+                    # model stops repeating the same dead-end fix (AdaExplore-style
+                    # validity rules). Only applies to error refinement, not the
+                    # performance/optimization branch below.
+                    if current_feedback.error_type != "performance":
+                        past = [
+                            r for r in history
+                            if r.feedback is not None
+                            and r.feedback.error_type != "performance"
+                        ]
+                        if past:
+                            mem = "\n".join(
+                                f"- Attempt {r.iteration}: {r.feedback.error_type} — {r.feedback.summary}"
+                                for r in past[-6:]
+                            )
+                            feedback_text = (
+                                "# Previously attempted fixes that STILL FAILED "
+                                "(do NOT repeat these approaches):\n"
+                                f"{mem}\n\n"
+                                f"# Current error to fix now:\n{feedback_text}"
+                            )
+
                     if current_feedback.error_type == "performance" and current_code:
-                        # Optimization prompt
+                        # Optimization prompt — fold measured profiling signals
+                        # (memory_efficiency / compute_utilization / bottleneck)
+                        # into profile_data so the LLM optimizes the real bottleneck.
                         profile_data = None
                         if current_eval and current_eval.speedup is not None:
                             profile_data = {
@@ -237,6 +327,8 @@ class PipelineOrchestrator:
                                 "pytorch_time_ms": current_eval.pytorch_time_ms,
                                 "triton_time_ms": current_eval.triton_time_ms,
                             }
+                        if current_profile:
+                            profile_data = {**(profile_data or {}), **current_profile}
                         prompt = self.prompt_builder.build_optimization_prompt(
                             pytorch_code=pytorch_code,
                             current_code=current_code,
@@ -336,6 +428,17 @@ class PipelineOrchestrator:
 
                 assert current_eval is not None
 
+                # Track the consecutive-incorrect streak that drives the
+                # context-reset policy: cleared on a correct kernel, counted up
+                # otherwise.
+                if current_eval.is_correct:
+                    refine_streak = 0
+                else:
+                    refine_streak += 1
+                    # Distill this failure into a persistent skill-memory rule.
+                    if self.skill_memory is not None:
+                        self._extract_skill_rule(current_code, current_eval)
+
                 if current_eval.compile_error or current_eval.runtime_error and not current_eval.is_correct:
                     # Compilation or runtime error -> reflect
                     current_feedback = self.reflector.analyze(
@@ -379,9 +482,31 @@ class PipelineOrchestrator:
                     state = _State.COMPLETE
 
                 else:
-                    # Correct but slow -> optimize
+                    # Correct but slow -> profile, then optimize.
+                    # Run the profiler (ncu hardware counters, or roofline
+                    # fallback) so the optimization feedback and the next
+                    # generation prompt are grounded in measured bottlenecks.
+                    current_profile = None
+                    try:
+                        current_profile = self.profiler.profile(
+                            generated_code=current_code or "",
+                            reference_code=pytorch_code,
+                            problem_id=problem_id,
+                            triton_time_ms=current_eval.triton_time_ms,
+                        )
+                        if current_profile:
+                            logger.info(
+                                "%sIteration %d: PROFILE (%s) -> bottleneck=%s, mem=%.1f%%, compute=%.1f%%",
+                                pid_tag, iteration, current_profile.get("source"),
+                                current_profile.get("bottleneck"),
+                                current_profile.get("memory_efficiency", 0.0),
+                                current_profile.get("compute_utilization", 0.0),
+                            )
+                    except Exception as exc:  # noqa: BLE001
+                        logger.warning("%sProfiling failed: %s", pid_tag, exc)
+
                     current_feedback = self.optimizer.build_optimization_feedback(
-                        current_code or "", current_eval
+                        current_code or "", current_eval, profile_data=current_profile
                     )
                     history.append(IterationRecord(
                         iteration=iteration,
@@ -580,6 +705,37 @@ class PipelineOrchestrator:
             tensor_core_gen=gpu_cfg.get("tensor_core_gen", 5),
             tdp_watts=gpu_cfg.get("tdp_watts", 300),
         )
+
+    def _extract_skill_rule(self, code: Optional[str], eval_result: EvalResult) -> None:
+        """Distill a failing kernel + its error into a one-line skill-memory rule.
+
+        Uses one cheap LLM call (AdaExplore-style). Failures are silently
+        ignored so rule extraction never breaks the pipeline.
+        """
+        if self.skill_memory is None:
+            return
+        err = (
+            eval_result.correctness_error
+            or eval_result.runtime_error
+            or eval_result.compile_error
+            or ""
+        )
+        if not err:
+            return
+        try:
+            prompt = RULE_EXTRACTION_PROMPT.format(
+                code_block=(code or "")[:4000],
+                error_message=str(err)[:2000],
+            )
+            result = self.llm_client.generate(prompt, max_tokens=120, temperature=0.0)
+            text = getattr(result, "code", None) or getattr(result, "raw_response", "") or ""
+            for line in text.splitlines():
+                if line.strip().lower().startswith("you cannot"):
+                    if self.skill_memory.add(line.strip()):
+                        logger.info("Skill memory += new rule (total %d)", len(self.skill_memory))
+                    return
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("skill rule extraction failed: %s", exc)
 
     @staticmethod
     def _format_feedback(feedback: Feedback) -> str:

@@ -122,6 +122,12 @@ class LLMClient:
         if model in _known_no_temp or resolved_name in _known_no_temp:
             self._no_temperature_models.add(resolved_name)
 
+        # Models whose chat template rejects a separate ``system`` role
+        # (e.g. AutoTriton / Seed-Coder). For these, the system message is
+        # folded into the user prompt instead of sent as its own role.
+        _name_l = f"{model} {resolved_name}".lower()
+        self._no_system_role = ("autotriton" in _name_l or "seed-coder" in _name_l)
+
         # Initialize OpenAI clients
         self.client = OpenAI(
             base_url=self.base_url,
@@ -664,6 +670,11 @@ class LLMClient:
         model_name = self._resolve_model_name(model_id)
         model_params = self._get_model_params(model_id)
 
+        # Models that reject a separate system role: fold it into the prompt.
+        if getattr(self, "_no_system_role", False) and system_message:
+            prompt = system_message + "\n\n" + prompt
+            system_message = None
+
         # Override defaults with provided values
         if temperature is None:
             temperature = model_params.get("temperature", 0.3)
@@ -844,6 +855,11 @@ class LLMClient:
         model_id = model or self.model
         model_name = self._resolve_model_name(model_id)
         model_params = self._get_model_params(model_id)
+
+        # Models that reject a separate system role: fold it into the prompt.
+        if getattr(self, "_no_system_role", False) and system_message:
+            prompt = system_message + "\n\n" + prompt
+            system_message = None
 
         # Override defaults with provided values
         if temperature is None:

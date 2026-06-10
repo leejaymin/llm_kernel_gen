@@ -280,16 +280,42 @@ class KernelEvaluator:
                             max_abs_error=max_abs_error,
                         )
 
-                    abs_diff = (ref_t.float() - gen_t.float()).abs()
+                    ref_f, gen_f = ref_t.float(), gen_t.float()
+                    abs_diff = (ref_f - gen_f).abs()
                     trial_max = abs_diff.max().item()
                     max_abs_error = max(max_abs_error, trial_max)
 
                     if not torch.allclose(
-                        ref_t.float(), gen_t.float(), atol=self.atol, rtol=self.rtol
+                        ref_f, gen_f, atol=self.atol, rtol=self.rtol
                     ):
+                        # Rich diagnostics so the refinement prompt can pinpoint
+                        # the failure (scale error, all-zeros, dtype mismatch, ...).
+                        tol = self.atol + self.rtol * ref_f.abs()
+                        bad = abs_diff > tol
+                        n_bad, n_tot = int(bad.sum().item()), bad.numel()
+                        max_rel = (abs_diff / ref_f.abs().clamp_min(1e-12)).max().item()
+                        w = int(abs_diff.flatten().argmax().item())
+                        rv = ref_f.flatten()[w].item()
+                        gv = gen_f.flatten()[w].item()
+                        dtype_note = (
+                            f" | dtype differs (ref={ref_t.dtype}, gen={gen_t.dtype}) — "
+                            f"output must match the reference dtype"
+                            if ref_t.dtype != gen_t.dtype else ""
+                        )
+                        zero_note = (
+                            " | generated output is ALL ZEROS (kernel likely not "
+                            "writing results / wrong grid or mask)"
+                            if gen_f.abs().max().item() == 0.0 else ""
+                        )
                         err = (
-                            f"Numerical mismatch on output {idx}, trial {trial}: "
-                            f"max_abs_error={trial_max:.6e}"
+                            f"Numerical mismatch on output {idx} (trial {trial}): "
+                            f"max_abs_error={trial_max:.3e}, max_rel_error={max_rel:.3e}, "
+                            f"{n_bad}/{n_tot} ({100.0 * n_bad / max(n_tot, 1):.1f}%) elements "
+                            f"exceed tolerance (atol={self.atol}, rtol={self.rtol}). "
+                            f"Worst element: ref={rv:.6g} vs gen={gv:.6g}. "
+                            f"ref[mean={ref_f.mean().item():.4g}, std={ref_f.std().item():.4g}], "
+                            f"gen[mean={gen_f.mean().item():.4g}, std={gen_f.std().item():.4g}]"
+                            f"{dtype_note}{zero_note}"
                         )
                         logger.error("%s%s", pid_tag, err)
                         for d in temp_dirs:
@@ -299,6 +325,13 @@ class KernelEvaluator:
                             correctness_error=err,
                             max_abs_error=max_abs_error,
                         )
+
+                # Free per-trial GPU tensors before the next iteration.
+                # KernelBench inputs can be multi-GB (e.g. P19 ReLU is
+                # 4096x393216 = 6 GB); without this, n_correctness trials
+                # accumulate and OOM the GPU, falsely failing correct kernels.
+                del ref_output, gen_output, inputs, ref_tensors, gen_tensors
+                torch.cuda.empty_cache()
 
             logger.info(
                 "%sCorrectness passed (%d trials, max_abs_error=%.6e)",

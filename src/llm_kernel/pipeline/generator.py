@@ -159,6 +159,7 @@ class KernelGenerator:
         pytorch_code: str,
         operation_desc: str = "",
         input_shapes: Optional[dict] = None,
+        skill_memory: str = "",
     ) -> GenerationOutput:
         """Generate a Triton kernel from PyTorch reference code.
 
@@ -184,11 +185,13 @@ class KernelGenerator:
                 prompt = self.prompt_builder.build_generation_prompt(
                     pytorch_code=pytorch_code,
                     operation_desc=enriched_desc,
+                    skill_memory=skill_memory,
                 )
             else:
                 prompt = self.prompt_builder.build_generation_prompt(
                     pytorch_code=pytorch_code,
                     operation_desc=enriched_desc + _FORMAT_RETRY_SUFFIX,
+                    skill_memory=skill_memory,
                 )
 
             gen_result: GenerationResult = self.llm_client.generate(
@@ -274,11 +277,13 @@ class KernelGenerator:
                 prompt = self.prompt_builder.build_generation_prompt(
                     pytorch_code=pytorch_code,
                     operation_desc=enriched_desc,
+                    skill_memory=skill_memory,
                 )
             else:
                 prompt = self.prompt_builder.build_generation_prompt(
                     pytorch_code=pytorch_code,
                     operation_desc=enriched_desc + _FORMAT_RETRY_SUFFIX,
+                    skill_memory=skill_memory,
                 )
 
             gen_result = await self.llm_client.agenerate(

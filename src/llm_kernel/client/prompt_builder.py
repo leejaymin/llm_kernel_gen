@@ -160,7 +160,9 @@ CRITICAL REMINDERS:
 {{ pytorch_code }}
 ```
 
-**Required Output Format** (follow EXACTLY):
+{% if skill_memory %}{{ skill_memory }}
+
+{% endif %}**Required Output Format** (follow EXACTLY):
 ```python
 import torch
 import triton
@@ -194,6 +196,12 @@ def get_inputs():
 def get_init_inputs():
     return []
 ```
+
+CRITICAL — INPUT CONTRACT (correctness is checked against this, read carefully):
+- Your kernel is evaluated with the EXACT inputs produced by the reference `get_inputs()` above — typically **float32** on CUDA. Do NOT assume, require, cast, or `assert` a specific dtype such as float16/bfloat16. Never write `assert x.dtype in (...)` or `x.half()`.
+- Accept whatever dtype the input tensors actually have. For matmul/reductions, accumulate in float32 (`acc = tl.zeros(..., dtype=tl.float32)`) and cast the result back to the input dtype only at the final store.
+- `Model.forward` MUST accept the SAME number, shapes, and dtypes of arguments as the reference `forward`. Do not add, drop, reorder, or cast inputs.
+- `get_inputs()` and `get_init_inputs()` MUST mirror the reference EXACTLY: same shapes and dtypes; `get_init_inputs()` returns the Model constructor argument list (often `[]`). Never return a dict like `{'forward': ...}`.
 
 IMPORTANT RULES:
 - class name MUST be exactly `Model` inheriting from `nn.Module`
@@ -292,6 +300,7 @@ Return ONLY the optimized Python code, no explanations.
         pytorch_code: str,
         gpu_spec: Optional[Dict[str, Any]] = None,
         operation_desc: str = "",
+        skill_memory: str = "",
     ) -> str:
         """
         Build prompt for initial kernel generation.
@@ -312,6 +321,7 @@ Return ONLY the optimized Python code, no explanations.
             pytorch_code=pytorch_code,
             gpu_spec=gpu_spec,
             operation_desc=operation_desc,
+            skill_memory=skill_memory,
         )
 
     def build_refinement_prompt(
