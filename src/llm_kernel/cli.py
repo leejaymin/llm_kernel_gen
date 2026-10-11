@@ -691,7 +691,7 @@ def models(
 
         if show_vram:
             vram_str = f"{vram_gb} GB" if vram_gb else "Unknown"
-            gpu_util = info.get('gpu_memory_utilization', 0.5)
+            gpu_util = info.get('gpu_memory_utilization') or 0.5   # models.yaml may set null
 
             row.extend([
                 vram_str,

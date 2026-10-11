@@ -318,39 +318,113 @@ Mirage~\cite{wu2025mirage}는 다층 슈퍼옵티마이저로서
 이러한 접근들은 LLM을 사용하지 않고 컴파일러, 탐색, 또는 형식 검증 기법에 기반하며,
 커널 코드 자체의 자동 생성보다는 기존 코드의 최적화에 초점을 맞추고 있다.
 
-\subsection{LLM 기반 GPU 커널 생성}
+\subsection{LLM 기반 GPU 커널 생성: 벤치마크와 학습 기반 접근}
 
-LLM을 활용한 GPU 커널 생성 연구는 최근 급속히 확대되고 있다.
+LLM을 활용한 GPU 커널 생성 연구는 최근 급속히 확대되고 있으며,
+이 분야의 연구 동향은 여러 서베이를 통해 체계적으로 정리되고 있다~\cite{yu2026automated_kernel_survey, zhang2026compilerstack, gong2025codeopt_survey}.
 벤치마크 측면에서 KernelBench~\cite{ouyang2024kernelbench}는
 PyTorch 레퍼런스로부터 등가의 최적화된 GPU 커널 생성을 평가하는
-250개 문제의 3단계 벤치마크를 수립하였으며,
+250개 문제의 3단계 벤치마크를 수립하여 사실상의 표준이 되었으며,
 TritonBench~\cite{li2025tritonbench}는 184개의 실제 GitHub Triton 연산자를 수집하여
 Triton에 특화된 벤치마크를 제공한다.
-Yu 등~\cite{yu2026automated_kernel_survey}은 LLM 시대의 자동 커널 생성에 대한
-포괄적인 서베이를 통해 이 분야의 연구 동향을 체계적으로 정리하였다.
+최근 TritonGym~\cite{tritongym2026}은 컴파일러·검증기·프로파일러 등의 도구 접근을
+function-call API로 표준화하여, 모델의 내재 능력과 에이전트 워크플로우 설계를
+분리하여 평가할 수 있는 환경을 제안하였다.
 
-강화 학습 기반 접근으로
-TritonRL~\cite{woo2025tritonrl}은 LLM이 Triton 코드를 추론하고 생성하도록
-RL 기반 훈련을 수행하며,
-AutoTriton~\cite{li2025autotriton}은 GRPO 기반 강화 학습을 통해
-Triton 프로그래밍 능력을 향상시킨다.
-프로파일링 기반 접근으로
-TritonForge~\cite{li2025tritonforge}는 실행 프로파일 정보를 활용하여
-자동으로 Triton 커널을 최적화하는 프레임워크를 제안한다.
-CUDA 커널 생성 분야에서는
-CUDA-LLM~\cite{chen2025cudallm}이 LLM의 효율적 CUDA 커널 생성 능력을 입증하였으며,
-AI CUDA Engineer~\cite{lange2025aicudaengineer}는
-에이전트 기반의 CUDA 커널 발견, 최적화, 합성 프레임워크를 제시한다.
+강화 학습(RL) 기반 접근은 도메인 특화 모델을 학습시켜 커널 생성 능력을 높인다.
+Triton 영역에서 AutoTriton~\cite{li2025autotriton}은 SFT와 GRPO를 결합하여
+8B 규모 모델로 상용 모델에 필적하는 성능을 달성하였고,
+TritonRL~\cite{woo2025tritonrl}은 세분화된 검증 가능 보상으로 reward hacking을 억제하며,
+DRTriton~\cite{drtriton2025}은 대규모 합성 데이터로 RL의 데이터 부족 문제를 완화한다.
+CUDA 영역에서는 CUDA-L1~\cite{cudal1_2026}이 대조적 강화학습(contrastive RL)을,
+Kevin~\cite{baronio2025kevin}이 커널 최적화의 반복적 특성을 반영한 멀티턴 RL을 제안하였으며,
+나아가 Tehrani 등~\cite{tehrani2026gpt5kernel}은 GPT-5와 같은 프론티어 모델을
+RL로 파인튜닝하여 단일 시도 정확도를 크게 끌어올렸다.
+특히 Dr.\,Kernel~\cite{drkernel2026}은 커널 RL의 두 실패 모드인 \emph{reward hacking}
+(\texttt{@triton.jit}만 부착하고 실제 호출하지 않아 측정을 부풀림)과
+\emph{lazy optimization}(사소한 sub-op만 교체하여 병목 융합을 놓침)을 명시적으로 규명하고,
+분산 실행 환경 KernelGYM과 자기 포함(self-inclusion) 편향을 제거한 멀티턴 이득 추정기 TRLOO,
+프로파일링 기반 보상/거부 샘플링으로 이를 완화하여 14B 모델로 상용 플래그십과 경쟁하는 성능을 보고한다 ---
+이는 본 연구가 관측한 ``검증 강도와 서빙·프레임워크 예산이 측정을 좌우한다''는 문제의식과 직접 상통한다.
+가장 최근에는 대규모 에이전틱 RL을 결합한 CUDA Agent~\cite{dai2026cudaagent}가
+KernelBench 전 레벨에서 \texttt{torch.compile}을 능가하며 상용 프론티어 모델을 상회하였고,
+MusaCoder~\cite{cheng2026musacoder}는 데이터 합성·거부 미세조정·실행 피드백 RL을 결합한
+full-stack 학습으로 신흥 가속기(Moore Threads MUSA)에서도 native 커널 생성을 실증하였다.
+이러한 학습 기반 접근은 강력하지만, 모델 훈련을 위한 데이터 큐레이션과
+상당한 연산 자원을 요구한다는 공통적 진입 장벽을 가진다.
+
+\subsection{에이전트 기반 커널 최적화 프레임워크}
+
+추가 훈련 없이(training-free) 기성 LLM을 반복적 에이전트 루프로 활용하는
+연구 흐름이 빠르게 부상하고 있다.
+AMD의 GEAK~\cite{wang2025geak}은 Generator, Reflector, Evaluator, Optimizer의
+네 모듈로 구성된 에이전트로 추론 시간 컴퓨트 스케일링을 통해
+고성능 Triton 커널을 생성하며,
+CudaForge~\cite{cudaforge2025}는 Coder와 Judge 두 에이전트가 협력하고
+Nsight Compute 하드웨어 프로파일링 메트릭을 직접 통합한다.
+EGG~\cite{egg2026}는 전문가 워크플로우를 모사하여 커널 생성을 알고리즘 구조 설계와
+하드웨어 특화 튜닝(병렬 매핑·타일링·메모리 최적화)의 단계로 분해하고
+단계 인식 다중 에이전트로 안정적 최적화 궤적을 확보하며,
+KernelBand~\cite{kernelband2026}은 커널 최적화를 확장하는 행동 공간을 갖는
+다중 무장 밴딧(multi-armed bandit)으로 정식화하여, 하드웨어 프로파일 기반 가지치기와
+런타임 행동 클러스터링으로 최적화 전략 선택을 원리적으로 유도한다.
+STARK~\cite{stark2026}는 커널 최적화를 Plan/Code/Debug 역할로 분해하고,
+PRAGMA~\cite{lei2025pragma}는 프로파일링 정보를 명시적 추론 단계로 변환하는
+다중 에이전트를 제안한다.
+AccelOpt~\cite{accelopt2025}은 경험 메모리를 활용한 자기 개선으로
+신규 가속기 커널을 최적화하며, Meta의 KernelEvolve~\cite{liao2026kernelevolve}은
+트리 탐색 기반 자기 개선 상태 머신을 NVIDIA·AMD·자체 가속기 등
+이종 플랫폼에 확장하여 프로덕션 규모의 적용 가능성을 입증하였다.
+AdaExplore~\cite{du2026adaexplore}는 반복되는 실패를 재사용 가능한 검증 규칙으로
+distill하는 failure-driven adaptation과 다양성 보존 탐색(diversity-preserving search)을
+결합하여, 단순 반복 개선의 한계를 극복한다.
+이 흐름은 본 연구와 동형의 생성·진단·평가 분리 구조를 공유하는데,
+KForge~\cite{sereda2026kforge}는 생성 에이전트와 성능 분석 에이전트가
+정확성 단계(functional pass)와 최적화 단계(optimization pass)를 교대하며
+NVIDIA·Intel 이종 가속기를 동시에 겨냥하고,
+Kernel Foundry~\cite{huang2026kernelfoundry}는 구조화된 진단 피드백 기반의
+multi-island 진화 탐색과 중앙 경험 라이브러리를 결합한다.
+AutoMegaKernel~\cite{jaber2026automegakernel}은 정적 스케줄-IR 검증기로
+잘못된 제안을 실행 전 거부하여 정확성을 \emph{구조의 속성}으로 끌어올리며,
+AgentCompile~\cite{li2026agentcompile}은 LLM 출력을 보조 탐색 메타데이터로만 사용하고
+정확성 결정을 컴파일러로 분리하여 silent miscompilation 위험을 차단한다.
+개별 커널을 넘어 전체 모델 그래프로 범위를 확장한 LEGO~\cite{lego2026}는
+\texttt{nn.Module} 경계를 구조적 사전지식으로 삼아 top-down 분해(정확성)와
+bottom-up 투기적 융합(성능)을 결합한 재귀적 AND-OR FusionTree로
+end-to-end 텐서 그래프를 최적화하며, 이는 본 연구에서 Level~2/3의 복합 융합 문제가
+겪는 컨텍스트 과부하와 예산 초과를 완화하는 구조적 처방을 시사한다.
+한편 raw CUDA 대신 컴팩트 DSL을 노출하여 LLM의 추론 부담을 줄이는 접근으로
+NVIDIA의 $\mu$CUTLASS~\cite{hari2026ucutlass}(CUTLASS DSL + Speed-of-Light guidance),
+CuTeGen~\cite{saba2026cutegen}(CuTe 기반 progressive refinement와 delayed profiling),
+QiMeng-Kernel~\cite{qimengkernel2026}(Macro-Thinking Micro-Coding)이 제안되었고,
+SwizzlePerf~\cite{swizzleperf2025}는 프로파일링 로그와 아키텍처 스펙을
+명시적 하드웨어 인식 컨텍스트로 구성한다.
+
+\subsection{정확성 검증과 본 연구의 위치}
+
+LLM이 생성한 커널은 컴파일은 되지만 의미적으로 틀릴 수 있어
+정확성 검증이 핵심 과제로 부각되고 있다.
+Kwon 등~\cite{kwon2026cove}은 컴파일러와 런타임이 협력하는 검증 사슬(Chain of Verification)을
+인프라 수준에서 제안하였고,
+COLT~\cite{tang2026colt}는 여러 소형 LLM이 공유 MCTS 위에서 협력하며
+모델 회귀 시 큰 모델로 escalate하는 다중 모델 협력 기법을 제시한다.
+코드 후보 선택 측면에서 Crupi 등~\cite{crupi2026slmjudge}은 소형 LM을 judge로 학습시켜
+저비용으로 다수 후보 중 정답을 선별하는 방법을 보였다.
 
 본 연구는 이러한 기존 연구들과 여러 측면에서 차별화된다.
-첫째, TritonRL이나 AutoTriton이 RL 기반의 모델 훈련을 필요로 하는 반면,
-본 연구는 상용 API 모델을 추가 훈련 없이 그대로 활용하여
-진입 장벽을 낮춘다.
-둘째, 단일 모델 평가에 집중하는 기존 연구들과 달리
-다중 모델 캐스케이딩 전략을 최초로 제안하고 그 효과를 실증한다.
-셋째, 모델별 에러 분류 체계를 통한 실패 모드 분석과
+첫째, 본 연구의 파이프라인은 GEAK~\cite{wang2025geak}과 유사한
+생성--평가--리플렉션--최적화 구조를 공유하나,
+GEAK이 AMD GPU를 대상으로 한 것과 달리 RTX PRO Blackwell(sm\_120)을 타깃으로 하며,
+TritonRL이나 AutoTriton과 같이 RL 기반 모델 훈련을 요구하지 않고
+상용 API 모델을 추가 훈련 없이 그대로 활용하여 진입 장벽을 낮춘다.
+둘째, 단일 모델 평가에 집중하는 기존 연구들과 달리,
+이종 모델을 결합하는 다중 모델 캐스케이딩 전략을 제안하고 그 효과를 실증한다.
+이는 COLT~\cite{tang2026colt}의 다중 모델 협력이나 SLM judge~\cite{crupi2026slmjudge}와
+문제의식을 공유하지만, 별도 학습 없이 이종 상용 모델의 확률적 다양성을 활용한다는 점에서 구별된다.
+셋째, 모델별 에러 분류 체계를 통한 실패 모드 분석을 제시하며,
+특히 AdaExplore~\cite{du2026adaexplore}가 탐색 다양성의 중요성을 보인 것과 맥을 같이하여,
 확률적 다양성(stochastic diversity)이 반복 심화(iteration depth)보다
-효과적이라는 발견을 제시한다.
+효과적이라는 발견을 정량적으로 입증한다.
 
 \subsection{추론 모델과 코드 생성}
 
@@ -507,9 +581,9 @@ Speedup은 $\text{speedup} = t_{\text{ref}} / t_{\text{gen}}$으로 계산하며
 
 \subsection{하드웨어 환경}
 
-모든 실험은 동일한 하드웨어 환경에서 수행되었다.
-GPU는 NVIDIA RTX PRO 6000 Blackwell로, 96GB VRAM과 sm\_120 컴퓨트 아키텍처를 탑재하고 있다.
-소프트웨어 환경은 Triton 3.5.1, PyTorch 2.x, Python 3.12, CUDA 12.x로 구성하였다.
+주 실험은 NVIDIA RTX PRO 6000 Blackwell(96GB VRAM, sm\_120)에서 수행하였으며,
+하드웨어 의존성 분석을 위해 NVIDIA H100(80GB, sm\_90)과 RTX A6000(48GB, Ampere)에서 교차 평가하였다(\S\ref{subsec:large_scale}).
+소프트웨어 환경은 Triton 3.5.1(H100)/3.6(Blackwell), PyTorch 2.x, Python 3.12, CUDA 12.x로 구성하였다.
 
 \subsection{실험 설계}
 
@@ -532,7 +606,7 @@ Table~\ref{tab:model_comparison}은 각 모델의 난이도별 정확도를 보�
 
 \begin{table}[t]
 \centering
-\caption{모델별 KernelBench 정확도 비교(Fast-0). $^\dagger$gpt-4o 실패 문제에 대해서만 실행(cascading strategy). $^\ddagger$Level~1만 평가(확장 실험).}
+\caption{모델별 KernelBench 정확도 비교(Fast-0). $^\dagger$gpt-4o 실패 문제에 대해서만 실행(cascading strategy). $^\ddagger$Level~1만 평가(확장 실험). $^{\S}$Level~1 P1--20 부분집합을 KernelAgent(best-of-4)로 평가한 RL 특화 오픈 모델.}
 \label{tab:model_comparison}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lcccc}
@@ -546,7 +620,10 @@ gpt-5.4-nano$^{\ddagger}$ & 35 (35\%) & --- & --- & --- \\
 gpt-5.2$^{\dagger}$ & 23/81 (28.4\%) & 9/94 (9.6\%) & 4/50 (8\%) & 36/225 (16\%) \\
 gpt-5.5$^{\ddagger}$ & 37 (37\%) & --- & --- & --- \\
 gpt-5.2-pro$^{\dagger}$ & 13/81 (16\%) & 0/94 (0\%) & 0/50 (0\%) & 13/225 (5.8\%) \\
+gemini-3.1-pro-preview$^{\ddagger}$ & 43 (43\%) & --- & --- & --- \\
 claude-opus-4-7$^{\ddagger}$ & \textbf{46 (46\%)} & --- & --- & --- \\
+\midrule
+Dr.Kernel-14B$^{\S}$ (RL, open) & 13/20 (65\%) & --- & --- & --- \\
 \bottomrule
 \end{tabular}
 }
@@ -555,9 +632,9 @@ claude-opus-4-7$^{\ddagger}$ & \textbf{46 (46\%)} & --- & --- & --- \\
 \footnotesize{$^{*}$파이프라인 초기 버전의 응답 파서 결함으로 모든 출력이 구문 오류로 실패. 모델 자체의 코드 생성 능력을 반영하지 않음.}
 \end{table}
 
-확장 실험을 포함한 전체 결과에서, \textbf{claude-opus-4-7이 단일 모델 최고 성능(46/100, 46\%)}을 달성하였다. 이는 기존 최고였던 gpt-5.2의 캐스케이딩 기준 28.4\%를 크게 상회하며, 이전 3-모델 캐스케이딩 전략(43/100)조차 초과하는 결과이다. gpt-5.5(37/100, 37\%)와 gpt-5.4-nano(35/100, 35\%)도 기존 gpt-4o(19\%)를 크게 상회하여, 최신 세대 모델의 Triton 커널 생성 능력이 전반적으로 향상되었음을 확인하였다.
+확장 실험을 포함한 전체 결과에서, \textbf{claude-opus-4-7이 단일 모델 최고 성능(46/100, 46\%)}을 달성하였다. 이는 기존 최고였던 gpt-5.2의 캐스케이딩 기준 28.4\%를 크게 상회하며, 이전 3-모델 캐스케이딩 전략(43/100)조차 초과하는 결과이다. gemini-3.1-pro-preview(43/100, 43\%), gpt-5.5(37/100, 37\%), gpt-5.4-nano(35/100, 35\%)도 기존 gpt-4o(19\%)를 크게 상회하여, 최신 세대 모델의 Triton 커널 생성 능력이 전반적으로 향상되었음을 확인하였다.
 
-특히 주목할 현상은 gpt-5.5와 claude-opus-4-7이 처음 44문제(P1--P44)에서 \textbf{정확히 동일한 37개 문제}를 해결했다는 점이다. P4만을 유일한 공통 실패로 공유하며 나머지 43문제에서 완벽히 일치하는 성공/실패 패턴을 보였다. 그러나 P45 이후 후반부에서 두 모델은 극적으로 분기하였다: gpt-5.5는 추가 0개, claude-opus-4-7은 추가 9개(P88--P100)를 해결하였다. 이러한 \textbf{후반부 회복 능력(late recovery)}이 claude-opus-4-7을 단일 모델 최고 성능으로 이끈 핵심 차별화 요인이다.
+특히 주목할 현상은 gpt-5.5와 claude-opus-4-7이 처음 44문제(P1--P44)에서 \textbf{정확히 동일한 37개 문제}를 해결했다는 점이다. P4만을 유일한 공통 실패로 공유하며 나머지 43문제에서 완벽히 일치하는 성공/실패 패턴을 보였다. 그러나 P45 이후 후반부에서 두 모델은 극적으로 분기하였다: gpt-5.5는 추가 0개, claude-opus-4-7은 추가 9개(P88--P100)를 해결하였다. 이러한 \textbf{후반부 회복 능력(late recovery)}이 claude-opus-4-7을 단일 모델 최고 성능으로 이끈 핵심 차별화 요인이다. 흥미롭게도 3사 플래그십인 gemini-3.1-pro-preview 역시 후반부(P88--P100)에서 6문제를 회복하며 43/100을 기록하여, late recovery가 특정 모델 고유의 능력이 아니라 \emph{최신 플래그십 세대의 공통 특성}으로 확산되고 있음을 시사한다.
 
 기존 모델 중 gpt-5.2는 시도한 문제 대비 높은 성공률을 달성하였으며, Level 3에서도 유일하게 4문제를 해결하여 복잡한 커널에 대한 생성 능력이 우수함을 보여준다. 반면, gpt-5.2-pro는 추론 특화 모델(reasoning model)임에도 불구하고 코드 생성 태스크에서 기대 이하의 성능을 보였다. Level 1에서 16\%에 그쳤으며, Level 2와 Level 3에서는 단 하나의 문제도 해결하지 못하였다. 이는 해당 모델의 긴 추론 시간으로 인한 타임아웃이 주요 원인이다(Section~\ref{subsec:error_analysis} 참조).
 
@@ -790,7 +867,79 @@ claude-opus-4-7 & 0.65 & \textbf{1.00} \\
 \end{table}
 
 \paragraph{프로파일링 피드백 Ablation}
-NVIDIA Nsight Compute(ncu) 하드웨어 카운터(SM/메모리 처리율, 병목 분류)를 최적화 프롬프트에 주입하는 A/B 실험을 3개 모델(Qwen3-Coder-30B, gpt-5.2, claude-opus-4-7)에 대해 수행하였다. 그러나 ncu 피드백은 어떤 모델에서도 정답률을 유의하게 개선하지 못하였으며(정답률 변화는 $\pm1$--$2$문제의 표본 노이즈 수준), 속도 개선도 미미하였다. 이는 ncu 프로파일이 \emph{이미 정확한} 커널의 최적화 단계에서만 작동하는 반면, 실제 병목은 정확성(값 불일치)이라는 본 연구의 핵심 진단(\S\ref{subsec:error_transition}의 에러 전이 가설)과 일치한다. 즉 프로파일링 기반 최적화는 정확성 문제가 선결된 이후에야 의미를 가지며, 이는 \emph{지연 프로파일링}(correctness-first, profiling-later) 설계의 필요성을 실증적으로 뒷받침한다.
+NVIDIA Nsight Compute(ncu) 하드웨어 카운터(SM/메모리 처리율, 병목 분류)를 최적화 프롬프트에 주입하는 A/B 실험을 3개 모델(Qwen3-Coder-30B, gpt-5.2, claude-opus-4-7)에 대해 수행하였다. 그러나 ncu 피드백은 어떤 모델에서도 정답률을 유의하게 개선하지 못하였으며(정답률 변화는 $\pm1$--$2$문제의 표본 노이즈 수준), 속도 개선도 미미하였다. 이는 ncu 프로파일이 \emph{이미 정확한} 커널의 최적화 단계에서만 작동하는 반면, 실제 병목은 정확성(값 불일치)이라는 본 연구의 핵심 진단(\S\ref{subsec:error_transition}의 에러 전이 가설)과 일치한다. 즉 프로파일링 기반 최적화는 정확성 문제가 선결된 이후에야 의미를 가지며, 이는 \emph{지연 프로파일링}(correctness-first, profiling-later) 설계의 필요성을 실증적으로 뒷받침한다. 이 결과는 자기진화 에이전트에서 \emph{정렬된(aligned) 피드백만이 계획 개선에 유효}하다는 최근의 독립적 분석~\cite{chong2026feedback2plan}과도 일치한다.
+
+\subsection{대규모 확장 실험: 전체 레벨 $\times$ 다중 하드웨어 $\times$ 다중 벤치마크}
+\label{subsec:large_scale}
+
+수정된 파이프라인으로 무료 오픈소스 모델 두 가지(\textbf{Qwen3-Coder-30B}, \textbf{AutoTriton-8B}~\cite{li2025autotriton})를 두 하드웨어(\textbf{RTX PRO 6000 Blackwell}, sm\_120 / \textbf{H100}, sm\_90)에서 교차 평가하였다. 빠른 전수 스캔을 위해 best-of-1, 반복 3회로 KernelBench 전체 250문제(L1 100, L2 100, L3 50)와 FlashInfer-Bench\footnote{NVIDIA Blackwell용 실전 LLM 서빙 커널 벤치마크. 본 연구에서는 dense(GEMM) 8문제를 KernelBench 형식으로 변환해 평가하였다.} 8문제를 측정하였다(Table~\ref{tab:largescale}).
+
+\begin{table}[t]
+\centering
+\caption{전체 레벨 정답률(Fast-0), best-of-1·반복 3. AT=AutoTriton-8B. BW=Blackwell sm\_120, H100=sm\_90, A6000=Ampere. H100/A6000 AT 열은 2026-06 전체 스위트 재실행 결과이며, best-of-1 특성상 절대값은 실행 간 편차가 있으나 모델·하드웨어 간 정성적 순서는 유지된다($^{\ddagger}$).}
+\label{tab:largescale}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{레벨} & \textbf{BW qwen} & \textbf{H100 qwen} & \textbf{BW AT} & \textbf{H100 AT}$^{\ddagger}$ & \textbf{A6000 AT}$^{\ddagger}$ \\
+\midrule
+L1 (100)        & 0.27 & 0.12$^{\dagger}$ & \textbf{0.47} & 0.43 & 0.37 \\
+L2 (100)        & 0.05 & 0.06 & 0.10 & 0.08 & \textbf{0.12} \\
+L3 (50)         & 0.04 & 0.06 & \textbf{0.06} & 0.02 & 0.04 \\
+FlashInfer (8)  & 0.00 & 0.00 & 0.00 & \textbf{0.25} & 0.00 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+세 가지 발견이 두드러진다. 첫째, \textbf{무료 8B Triton 특화 모델(AutoTriton)이 30B 범용 모델(Qwen)을 전 레벨에서 일관되게 능가}한다. 별도의 소규모 정밀 실험(L1 1--20, best-of-3, 반복 9)에서는 AutoTriton-8B가 H100에서 0.95, Qwen-30B가 Blackwell에서 0.75의 정답률을 보여, Triton 특화 강화학습의 비용 효율을 뒷받침한다. 둘째, \textbf{H100에서 Qwen의 L1 정답률(0.12$^{\dagger}$)이 비정상적으로 낮은 것은 GPU 메모리 제약} 때문이다. H100(80GB)은 30B 모델 서빙 시 평가기에 충분한 메모리를 남기지 못해 대형 입력 문제(예: ReLU의 6.4GB 입력)가 OOM으로 거짓 실패하며, 8B 모델(AutoTriton)은 메모리 여유로 이 문제가 없다(\S\ref{subsec:infra_remeasure}). 셋째, \textbf{FlashInfer GEMM은 H100 AutoTriton에서만 성공}(0.25)하고 Blackwell과 A6000에서는 0을 기록하여, Triton 버전(3.5.1 vs 3.6)과 컴퓨트 아키텍처에 따른 커널 컴파일 차이를 시사한다. 한편 동일 AutoTriton 모델을 세 번째 하드웨어인 A6000(Ampere, 48GB)에서 재실행한 결과는 KernelBench 전 레벨에서 Blackwell·H100과 동일한 수준의 정답률(L1 0.37, L2 0.12, L3 0.04)을 보여, 메모리가 충분한 조건에서 \textbf{정답률이 하드웨어에 거의 독립적}이라는 결론(아래)을 추가로 뒷받침한다. 다만 A6000은 추론 처리량이 H100의 약 1/4--1/5에 그쳐(약 34 대 150 tokens/s) 동일 스위트 수행에 H100 대비 약 3배의 벽시계 시간이 소요되었다.
+
+\paragraph{TritonBench 평가}
+본 연구가 Triton 커널 생성을 다루므로, Triton 특화 벤치마크인 TritonBench-T\footnote{각 문제는 PyTorch 함수와 \texttt{test\_*()} 하니스로 구성되며, 생성된 Triton 구현을 동일 하니스로 실행해 결과 일치(Execution Accuracy)와 실행 가능성(Call Accuracy)을 측정한다.}~\cite{li2025autotriton}(166문제)으로도 4조합을 평가하였다(Table~\ref{tab:tritonbench}). 네 조합 모두 Execution Accuracy 0.15--0.19로 낮고 모델/하드웨어 간 격차가 작았다. 처음에는 이 격차를 (1) TritonBench에 optimizer(Adam, SGD) 등 Triton 변환이 본질적으로 부적합한 문제가 포함된 점과, (2) AutoTriton의 보고 성능이 그 학습 프롬프트·자체 평가 하니스에 특화된 반면 본 실험은 통일된 변환 프롬프트로 공정 비교한 \emph{분포 외(out-of-distribution)} 조건으로 가설하였다.
+
+\paragraph{프롬프트 형식 대 test-time scaling Ablation}
+이 가설을 검증하기 위해 프롬프트 형식(PyTorch 레퍼런스를 주는 \emph{convert} 대 AutoTriton의 공식 instruction \emph{official})과 추론 시간 스케일링(단일 시도 $n{=}1$ 대 $n{=}3$ 샘플링$+$반복 수정)을 교차한 $2\times2$ ablation을 수행하였다. 결과는 OOD 가설을 뒤집었다. \textbf{프롬프트 형식만 바꾸는 단독 효과는 미미}하여 Execution Accuracy가 0.151에서 0.127로 오히려 하락하기도 한 반면, \textbf{test-time scaling을 켜면 Execution Accuracy가 약 2.3배, Call Accuracy가 약 2.5배 상승}하였다. 나아가 스케일링 하에서는 PyTorch 레퍼런스를 제공하는 convert 형식이 프롬프트 정렬보다 오히려 우수하였다. 즉 원본 논문 수치와의 격차는 RL 학습 프롬프트 형식의 분포 차이가 아니라 \emph{단일 시도 평가냐, 반복 수정과 샘플링을 동반하느냐}의 차이로 설명된다. 이는 KernelBench에서 관찰한 결론(\S\ref{subsec:large_scale})과 정확히 일치하며, \textbf{test-time scaling이 벤치마크를 가리지 않는 일반 원리}임을 재확인한다.
+
+\begin{table}[t]
+\centering
+\caption{TritonBench-T(166문제) Execution Accuracy(best-of-1).}
+\label{tab:tritonbench}
+\begin{tabular}{lcc}
+\toprule
+\textbf{모델} & \textbf{Blackwell} & \textbf{H100} \\
+\midrule
+AutoTriton-8B & 0.157 & 0.151 \\
+Qwen-30B      & 0.163 & 0.187 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+종합하면, \textbf{정답률(correctness)은 하드웨어에 거의 독립적}(모델 능력과 평가 메모리가 지배)이며, \textbf{속도 향상(speedup)은 하드웨어에 강하게 의존}한다. 예컨대 정사각 행렬곱(L1 P1)의 speedup은 Blackwell 1.61$\times$ 대 H100 0.83$\times$로, H100의 강력한 cuBLAS 기준선 때문에 생성 Triton 커널이 상대적으로 불리하다. 따라서 speedup의 절대 비교는 동일 하드웨어 내에서만 유효하며, Blackwell sm\_120의 차별화는 정답률이 아닌 속도·실전 커널(FlashInfer) 축에서 추구해야 한다.
+
+\subsection{초대형 추론 모델의 극단 양자화 실험: 모델 크기 대 가중치 정밀도}
+\label{subsec:glm_quant}
+
+``더 큰 모델이면 커널 생성이 나아지는가''를 검증하기 위해, 공개 최대급 추론 모델인 GLM-5.2(MoE, BF16 기준 약 1.5TB)를 H100 7-GPU 노드(각 80GB)에 극단 양자화로 적재하여 동일 프로토콜(best-of-1, 반복 3)로 평가하였다. 서빙은 llama.cpp의 레이어 분할 파이프라인 병렬(GPU 6장, 마지막 1장은 평가 전용)로 수행하였고, 2-bit(UD-Q2\_K\_XL, 254GB)와 서빙 예산(480GB) 내 최대 정밀도인 4-bit(UD-Q4\_K\_XL, 467GB)를 비교하였다(Table~\ref{tab:glmquant}).
+
+\begin{table}[t]
+\centering
+\caption{GLM-5.2 양자화 수준별 정답률(Fast-0, H100, best-of-1·반복 3). 동일 조건의 Qwen-30B·AutoTriton-8B(Table~\ref{tab:largescale})를 참조로 병기.}
+\label{tab:glmquant}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{레벨} & \textbf{GLM 2-bit} & \textbf{GLM 4-bit} & \textbf{Qwen-30B} & \textbf{AT-8B} \\
+\midrule
+L1 (100)       & 0.10 & 0.23$^{\S}$ & 0.27 & \textbf{0.47} \\
+L2 (100)       & 0.00 & -- & 0.05 & \textbf{0.10} \\
+L3 (50)        & 0.00 & -- & 0.04 & \textbf{0.06} \\
+FlashInfer (8) & 0.00 & -- & 0.00 & 0.00 \\
+\bottomrule
+\multicolumn{5}{l}{\footnotesize $^{\S}$표면 정답률. 문제당 2시간 한도 내 완주한 24문제 기준으로는 \textbf{0.96}(23/24)이며,}\\
+\multicolumn{5}{l}{\footnotesize 나머지 76문제는 저속 추론(초당 약 8토큰)으로 한도 초과(총 30시간 소요). L2 이하는 측정 중.}
+\end{tabular}
+\end{table}
+
+결과는 명확한 부정적 증거(negative evidence)를 제공한다. 2-bit GLM-5.2는 L1에서 0.10에 그쳤고 \textbf{L2/L3/FlashInfer에서는 단 한 문제도 해결하지 못했다}(레벨당 약 8.5시간, 총 21.5시간 소요). 세 가지 함의가 있다. 첫째, \textbf{양자화 손실은 문제 복잡도에 비례해 치명적}이다. 단일 연산(L1)에서는 일부 생존하던 생성 능력이, 여러 연산의 융합(L2)과 전체 모델(L3)처럼 긴 정밀 토큰 시퀀스가 필요한 과제에서 완전히 붕괴한다. 둘째, \textbf{가중치 정밀도를 희생한 모델 크기는 도메인 특화를 이기지 못한다}. 파라미터 수가 두 자릿수 배 큰 일반 추론 모델(2-bit)이 8B Triton 특화 모델(BF16)의 절반에도 미치지 못하며, 이는 \S\ref{subsec:large_scale}의 결론(특화 $>$ 규모)을 극단 사례로 재확인한다. 셋째, 추론(reasoning) 모델 특유의 긴 사고 토큰(시도당 약 2,600 토큰)은 정확도 이득 없이 비용만 증가시켰다. 한편 4-bit 재실험은 이 붕괴가 실제로 양자화 손실 때문이었음을 확증한다: \textbf{시간 한도 내 완주한 문제 기준 정답률이 0.96(23/24)으로 극적으로 회복}되어 오픈 모델 중 최고 수준(상용 opus의 1.00에 근접)을 보였다. 그러나 4-bit의 저속 추론(2-bit의 절반 이하)으로 전체의 76\%가 문제당 2시간 한도를 초과, 표면 정답률은 0.23에 그쳤다. 즉 병목이 \emph{정밀도(2-bit)에서 처리량(4-bit)으로 이동}한 것으로, 이는 \S\ref{subsec:gap_anatomy}의 벽시계 제약 발견과 정확히 일치한다. 종합하면 제한된 GPU 예산에서 ``초대형 모델을 낮은 정밀도로''는 품질이, ``온전한 정밀도로''는 속도가 무너지므로, ``중소형 모델을 온전한 정밀도로'' 서빙하는 편이 커널 생성에 유리함을 실증한다.
 
 \section{논의}
 \label{sec:discussion}
@@ -822,10 +971,61 @@ NVIDIA Nsight Compute(ncu) 하드웨어 카운터(SM/메모리 처리율, 병목
 
 또한, claude-opus-4-7 단일 모델(46/100)이 이전 3-모델 캐스케이딩 전략(43/100)을 초과한 것은 주목할 만하다. 이는 최신 세대 플래그십 모델의 발전이 다중 모델 전략의 필요성을 줄일 수 있음을 시사한다. 그러나 5개 모델 전체의 합집합(51/100)이 최선의 단일 모델보다 여전히 10.9\% 높다는 점은, 확률적 다양성 원리가 최신 모델에서도 여전히 유효함을 확인시켜 준다.
 
+\subsection{100\% 정답률 연구들과의 격차 해부: 예산 통제 관점}
+\label{subsec:gap_anatomy}
+
+KernelEvolve(100\%)~\cite{liao2026kernelevolve}, CudaForge(97.6\%)~\cite{cudaforge2025}, QiMeng(L1--2 $\sim$100\%)~\cite{qimengkernel2026} 등 최근 연구들이 KernelBench에서 사실상 만점을 보고하는 반면, Table~\ref{tab:largescale}의 본 연구 수치(L1 0.27--0.47)는 언뜻 큰 격차로 보인다. 그러나 본 연구의 통제 실험들은 이 격차가 모델 능력의 격차가 아니라 \textbf{대부분 test-time 계산 예산의 격차}임을 보여준다. Table~\ref{tab:budget}은 동일 파이프라인에서 예산 축만 바꾼 정답률을 정리한 것이다.
+
+\begin{table}[t]
+\centering
+\caption{동일 파이프라인에서 test-time 예산에 따른 Level~1 정답률. bo$N$=best-of-$N$, it$K$=반복 $K$회. 전수(100문제) 행은 Table~\ref{tab:largescale}, 정밀(P1--P20) 행은 \S\ref{subsec:infra_remeasure}·\S\ref{subsec:large_scale}의 측정이다. $^{\P}$완주한 38문제 기준(정답 29). 나머지 59문제는 문제당 시간 한도(2시간, 27회 시도 $\times$ 저속 서빙) 초과로 미완주 — 예산 확대의 실효가 벽시계 처리량에 의해 제약됨을 보여준다(총 22.9시간 소요).}
+\label{tab:budget}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llccc}
+\toprule
+\textbf{예산} & \textbf{범위} & \textbf{Qwen-30B} & \textbf{AT-8B} & \textbf{opus-4-7} \\
+\midrule
+bo1$\cdot$it3 (최소)  & L1 전체 & 0.27 & 0.47 & -- \\
+bo3$\cdot$it9 (충분)  & L1 P1--20 & 0.75 & \textbf{0.95} & \textbf{1.00} \\
+bo3$\cdot$it9 (충분)  & L1 전체 (A6000) & -- & 0.76$^{\P}$ & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+세 가지 요인으로 격차를 분해할 수 있다. 첫째, \textbf{test-time scaling이 지배적 요인}이다. 같은 오픈소스 8B 모델(AutoTriton)이 최소 예산에서 0.47, 충분한 예산(best-of-3, 반복 9, 실패 규칙 누적)에서 0.95로 상승하여 100\% 연구들과의 격차 대부분을 소거한다. L1 전체 100문제로의 확장 재현(A6000)에서도 완주 문제 기준 정답률이 0.37(최소 예산)에서 0.76으로 두 배가 되었으나, 동시에 전체의 59\%가 문제당 시간 한도를 초과해 미완주하였다 --- 즉 \emph{예산 확대의 실효는 시도당 처리량(서빙 속도와 병렬 경쟁)이라는 벽시계 제약에 의해 한정}되며, 이는 100\% 연구들이 고속 상용 API 혹은 대규모 서빙 인프라를 전제하는 이유를 설명한다. TritonBench에서도 동일 축이 Execution Accuracy를 약 2.3배 올렸다(\S\ref{subsec:large_scale}). 100\%를 보고하는 연구들은 예외 없이 무제한 트리 탐색(KernelEvolve), 프로파일링 동반 다회 수정(CudaForge), 다단계 메타 프롬프트와 수리 루프(QiMeng), 대규모 RL(Kevin~\cite{baronio2025kevin}, CUDA Agent~\cite{dai2026cudaagent}) 등 큰 시도 예산을 전제하며, 단일 시도 조건의 수치를 보고하지 않는다. 즉 Table~\ref{tab:largescale}는 능력의 상한이 아니라 \emph{예산 통제된 하한(budget-controlled floor)}이다. 둘째, \textbf{평가 인프라와 프롬프트 결함}이 한때 정답률을 최대 0.30까지 잠식했으며(OOM 거짓 실패, 입력 dtype 계약 부재; \S\ref{subsec:infra_remeasure}), 수정 후에는 재현 가능하게 회복되었다. 셋째, 남는 잔차는 \textbf{모델 능력}이다. 충분한 예산에서도 Qwen-30B는 0.75에 머무나, Triton 특화 RL을 거친 8B 모델은 0.95로 상용 플래그십(1.00)에 근접한다. 요컨대 \textbf{상용 모델 없이도 ``도메인 특화 오픈 모델 $+$ 충분한 test-time 예산 $+$ 건전한 평가 인프라''의 결합으로 만점권 정답률에 도달 가능}하며, 문헌의 100\% 수치와 본 연구의 전수 스캔 수치는 서로 다른 예산 체제의 측정으로 이해해야 한다. 부수적으로, 검증 엄격성의 차이도 있다. 본 평가는 무작위 입력 5회 반복과 dtype/shape 계약을 요구하는 반면, 문헌에는 보상 해킹으로 부풀려진 수치가 보고된 사례~\cite{lange2025aicudaengineer}가 있어, 예산과 검증 조건을 명시하지 않은 정답률 비교는 오도될 수 있다.
+
+에이전트 구조 자체의 기여도 통제 실험으로 분리하였다. 100\%를 보고한 공개 딥에이전트 KernelFalcon의 코드(KernelAgent)를 동일 오픈 모델(Qwen-30B, 로컬 서빙)로 재현한 결과, L1 P1--20 정답률은 본 파이프라인의 고예산 설정과 \textbf{동률(0.75)}이었고 실패 집합(ND/전치 행렬곱)도 일치하였다. 다만 벽시계 시간은 수 시간에서 약 1시간으로 크게 단축되었다(4-시드 병렬 탐색). 즉 \textbf{에이전트 구조는 탐색 효율을 높일 뿐 기반 모델의 능력 한계를 넘지 못하며}, 같은 구조가 상용 모델(gpt-5.2)로는 해당 실패 문제(예: 전치 both)를 1--2라운드에 해결한 것과 대조된다 --- 100\% 시스템의 잔여 격차는 결국 기반 모델 능력이 채운다. 이를 재확인하기 위해 더 강한 오픈 모델을 같은 구조에 투입하였다: GLM-5.2(4-bit)를 H100 8-GPU에 생성 전용으로 서빙하고 검증을 로컬 GPU로 분리한 구성에서 KernelAgent$\times$GLM-5.2는 \textbf{P1--20 전 문제를 해결(20/20, 1.00)}하여 상용 플래그십(opus, 1.00)과 동률에 도달하였다. Qwen이 두 구조 모두에서 실패한 3D/4D 및 전치 행렬곱 5문제를 포함하며, 1차 실행에서 남았던 2건(시간 한도 초과 1건, 추론 출력의 코드 블록 파싱 실패 1건)도 시간 한도 연장 재시도에서 즉시 해결되어 실패가 모델 능력이 아닌 운영 요인이었음이 확인되었다. 즉 \emph{구조(효율) $\times$ 모델 능력(상한)의 곱}이 정답률을 결정하며, \textbf{충분히 강한 오픈 모델과 공개 에이전트 구조의 결합만으로 상용 모델 없이 만점에 도달할 수 있다}. 이 결합을 L1 전체(100문제)로 확장 재현하는 실험을 진행 중이며(생성=H100 8-GPU GLM-5.2 4-bit, 검증=로컬 Pro~6000, 문제당 2시간 한도, 두 문제 동시 실행으로 8슬롯 포화), 그 과정에서 에이전트 프레임워크의 응답 토큰 상한(기본 8192)이 GLM의 추론 출력(5--7K 토큰)을 코드 블록 출력 이전에 절단하여 정답 가능한 문제를 ``코드 블록 없음''으로 거짓 실패시키는 현상을 발견하였다. 이 상한을 13000으로 상향하자 해당 구간(P40--49)의 정답률이 패치 이전 구간(P21--39, 0.37) 대비 약 두 배인 0.78로 회복되어, \textbf{서빙 컨텍스트 길이뿐 아니라 프레임워크의 응답 토큰 예산 또한 reasoning 모델의 평가를 왜곡하는 은닉 변수}임이 드러났다.
+나아가 커널 생성에 특화된 RL 오픈 모델 Dr.Kernel-14B~\cite{drkernel2026}(14B, KernelGYM에서 멀티턴 RL로 학습)을 동일 KernelAgent 구조(best-of-4)에 이식하여 L1 P1--20을 평가한 결과 13/20(0.65)로, 같은 구조의 Qwen-30B(0.75)나 GLM-5.2(1.00)보다 오히려 낮았다. 이는 \textbf{RL 특화 모델의 이점이 자신의 훈련 하니스(멀티턴 STTS·프로파일링 보상)에 최적화되어 있어, 서로 다른 에이전트 구조(4-시드 병렬 탐색)로 이식할 때 부분적으로만 전이됨}을 시사한다 --- 즉 정답률은 모델 능력뿐 아니라 \emph{평가 하니스와 훈련 하니스의 정합성}에도 의존하며, 이는 서로 다른 시스템에서 보고된 정답률을 직접 비교할 때 주의가 필요함을 다시 뒷받침한다. 마지막으로, 본 절의 핵심 주장인 ``test-time 예산이 정답률을 지배한다''를 제3자 시스템에서 독립적으로 교차 검증하기 위해 Dr.Kernel의 공개 코드(KernelGYM)와 released 14B 모델로 순차 test-time scaling을 완전 재현하였다: L2 100문제에서 유효 턴 수를 1에서 14로 늘리자 전체 기준 Fast@1.2가 0.17에서 0.77로 \emph{단조 증가}하였고(3턴 기준 0.24의 3.2배), best-of-history Fast@1은 0.86에 도달하여 논문 보고치(0.81)를 상회하였다 --- 동일 모델·동일 문제에서 오직 추론 예산만으로 성능이 3배 이상 갈리는 이 곡선은, 예산 명시 없는 정답률 비교가 왜 무의미한지를 저자 독립적 재현으로 보여준다. L1 전체 확장의 실행분(77문제) 정답률은 0.48이었으며, matmul/reduction/elementwise 계열에서는 높은 반면 합성곱(conv/conv\_transposed)·순차 스캔(cumsum) 계열에서 급격히 낮았다. 특히 conv 계열의 실패 원인을 절단(예산)과 능력으로 분리하기 위해, 서버를 슬롯 컨텍스트 32K(\texttt{-{}-parallel~4})로 재구성하고 응답 토큰 상한을 24000으로 올려 절단을 완전히 제거한 뒤 대표 conv 3문제를 재시도하였다. 그 결과 \textbf{절단은 사라졌으나(코드 블록 정상 출력) 세 문제 모두 refinement 예산 내 정답 수렴에 실패}하여, conv 계열의 잔여 실패는 토큰 예산이 아니라 \textbf{거대 텐서의 정확한 인덱싱을 요구하는 순수 모델 능력의 한계}임이 확인되었다. 즉 예산성 결함을 모두 제거한 뒤 남는 격차가 곧 기반 모델 능력이라는 본 절의 주장이 conv에서 이중으로 실증된다.
+
+이러한 예산 지배 논지에는 경계가 있으며, 이 또한 동일 재현 환경에서 정량화하였다. Dr.Kernel-14B를 TritonGym~\cite{tritongym2026}에서 단일 시도(OneShot)와 test-time scaling 에이전트(Leader, 반복 4회)로 평가한 결과, 표준 분포 문제(139개)의 Pass@1은 12.2\%에서 18.0\%로, 통과분의 오라클 대비 성능 geomean은 0.143에서 0.285로 약 두 배 상승하였다. 반면 \textbf{분포 밖(OOD) 문제(13개)의 Pass@1은 7.7\%에서 7.7\%로 전혀 변하지 않았다}. 즉 test-time 예산은 분포 내(in-distribution) 정확도와 성능만을 개선할 뿐, 분포 밖에서의 붕괴는 구제하지 못한다. 같은 방향의 증거가 신생 DSL 트랙(TLX/Gluon)에서도 관측되어, 로컬 환경에서 오라클 실행이 가능한 유효 3문제에 대해 Dr.Kernel-14B의 단일 시도 Pass@1이 0/3에 그쳤다. 이는 예산성 결함을 모두 제거한 뒤 남는 격차가 곧 기반 모델의 능력·분포 한계라는 앞선 conv 논증과 이중으로 일관되며, \textbf{예산으로 개선되는 축(분포 내)과 개선되지 않는 축(분포 밖 능력 한계)이 서로 다른 변수}임을 하나의 벤치마크 안에서 분리해 보여준다.
+
+\begin{table}[t]
+\centering
+\caption{STTS 턴 수에 따른 Fast@1.2(전체) 곡선(단위 \%). 동일 KernelGYM STTS 하니스에서 유효 턴 수만 1$\to$14로 확장하여 측정하였다. Qwen3-30B는 비RL 모델, Dr.Kernel-14B(DrK)는 커널 특화 RL 모델이다. 두 모델 모두 예산에 단조 스케일하나, RL 모델은 절편과 턴당 기울기를 모두 높이며, 레벨별로 포화점(L1 turn~7 부근)과 기울기(L3 미포화)가 다르다.}
+\label{tab:budget_curve}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+\textbf{모델 / 레벨} & \textbf{turn 1} & \textbf{turn 3} & \textbf{turn 7} & \textbf{turn 14} \\
+\midrule
+Qwen3-30B (비RL) $\cdot$ L2 & 3.7 & 11.9 & 16.8 & 28.4 \\
+DrK-14B (RL) $\cdot$ L2 & 17.4 & 41.3 & 60.6 & \textbf{76.9} \\
+DrK-14B (RL) $\cdot$ L1 & 11.5 & 22.0 & 27.0 & 31.2 \\
+DrK-14B (RL) $\cdot$ L3 & 3.0 & 8.3 & 13.0 & 20.5 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+예산 지배가 특정 모델의 성질이 아니라 일반적 현상임을 확인하기 위해, 동일 STTS 하니스로 비RL 모델(Qwen3-Coder-30B)과 RL 모델(Dr.Kernel-14B)의 스케일링 곡선을 비교하였다(Table~\ref{tab:budget_curve}). Level~2 전체 기준 Fast@1.2는 유효 턴 수를 1에서 14로 늘림에 따라 비RL 모델이 3.7\%에서 28.4\%로, RL 모델이 17.4\%에서 76.9\%로 \emph{둘 다 단조 증가}하였다. 두 모델 모두 예산에 단조적으로 스케일한다는 점에서 예산 지배는 모델 일반적이나, RL 모델은 절편(turn~1에서 4.7배)뿐 아니라 \textbf{턴당 한계효용(turn~1$\to$14 증가폭 $+$59.5\,pp 대 $+$24.7\,pp)까지 높였다} --- 즉 RL과 test-time 예산은 대체재가 아니라 보완재다. 나아가 예산 효용은 난이도에 따라 포화 양상이 달랐다. Dr.Kernel-14B의 3레벨 STTS 14턴 곡선에서 L1은 11.5\%에서 31.2\%로 오르되 turn~7 부근에서 포화하였고(정답률 자체는 54\%에 도달하나 cuBLAS 기준선 대비 speedup 조건이 병목이다), L2는 76.9\%까지 지속 상승하였으며, L3은 3.0\%에서 20.5\%로 turn~14에도 미포화 상태로 상대 이득이 6.8배에 달해 최대였다. 즉 \textbf{예산 스케일링은 전 레벨에서 유효하나 포화점과 기울기가 레벨마다 다르며}, 벤치마크 수치를 예산 축 없이 단일 값으로 비교하는 것이 왜 오도적인지를 난이도 차원에서 재확인한다.
+
+이 관점은 실무 지침으로 이어진다. 정답률 벤치마크 결과를 읽을 때는 (1) 시도 예산(best-of-$N$, 반복 수), (2) 검증 강도(무작위 입력 횟수, 허용 오차, 계약 검사), (3) 평가기 자원 여유(서빙과 평가의 메모리 분리), (4) 서빙 컨텍스트 길이(짧으면 반복 수정 프롬프트가 잘려 refinement가 무력화됨), (5) 프레임워크의 응답 토큰 상한(reasoning 모델은 코드 이전에 수천 토큰의 사고 과정을 소비하므로 통상 8K 상한은 코드 블록 출력 전 절단을 유발한다), 그리고 (6) 평가 분포(분포 내 vs OOD·신생 DSL) --- 예산으로 개선되는 축과 개선되지 않는 축의 구분을 함께 보고해야 하며, 본 연구는 이 축들을 명시한 예산 통제 비교를 제공한다는 점에서 문헌을 보완한다.
+
 \subsection{한계 및 향후 연구}
 \label{subsec:limitations}
 
-본 연구는 몇 가지 한계를 가진다. 첫째, 초기 실험에서 오픈소스 모델(Qwen 2.5 Coder 32B)의 평가는 평가기의 GPU 메모리 경합 결함으로 인해 정답률이 과소평가되었다(\S\ref{subsec:infra_remeasure}). 이 결함을 수정한 뒤 Level~1 부분집합 재측정에서 정답률이 회복되었으나(Table~\ref{tab:remeasure}), Level~1 전체(100문제) 및 Level~2/3에 대한 전면 재평가는 완료하지 못하였다. 둘째, 모든 실험이 단일 GPU(RTX PRO 6000 Blackwell) 환경에서 수행되어, 상이한 GPU 아키텍처에서의 일반화 가능성을 확인하지 못하였다. 셋째, 확장 실험에서 Anthropic의 claude-opus-4-7을 포함하였으나, Gemini 등 다른 LLM 제품군과의 비교가 부재하며, 확장 실험은 Level~1에 한정되어 있다.
+본 연구는 몇 가지 한계를 가진다. 첫째, 초기 실험에서 오픈소스 모델(Qwen 2.5 Coder 32B)의 평가는 평가기의 GPU 메모리 경합 결함으로 인해 정답률이 과소평가되었다(\S\ref{subsec:infra_remeasure}). 이 결함을 수정한 뒤 Level~1 부분집합 재측정에서 정답률이 회복되었으며(Table~\ref{tab:remeasure}), 충분한 test-time 예산(best-of-3, 반복 9, 실패 규칙 누적)에서의 Level~1 전체(100문제) 재평가는 현재 진행 중으로 Table~\ref{tab:budget}의 부분집합 결과(AutoTriton-8B 0.95)가 전체에서도 유지되는지 확인할 예정이다. 마찬가지로 KernelAgent$\times$GLM-5.2 조합의 Level~1 전체 확장 재현에서 실행분(77문제) 정답률 0.48을 얻었으며(P1--20 20/20), 미실행 conv 문제를 포함한 전수 상한 확정은 향후 과제로 남긴다 --- conv 계열은 절단을 제거한 통제 재시도에서도 실패하여 현 오픈 모델(GLM-5.2 4-bit)의 능력 한계로 확인되었다. Level~2/3의 고예산 전면 재평가는 향후 과제로 남긴다. 둘째, 하드웨어 교차 평가를 Blackwell·H100·A6000 세 아키텍처로 확장하여 정답률의 하드웨어 독립성을 확인하였으나(\S\ref{subsec:large_scale}), speedup은 기준선(cuBLAS 등)이 하드웨어마다 달라 동일 하드웨어 내 상대 비교로 한정된다. 셋째, 확장 실험에서 Anthropic의 claude-opus-4-7을 포함하였으나, Gemini 등 다른 LLM 제품군과의 비교가 부재하며, 확장 실험은 Level~1에 한정되어 있다.
 
 향후 연구 방향으로 다음을 제안한다.
 \begin{enumerate}
@@ -833,6 +1033,7 @@ NVIDIA Nsight Compute(ncu) 하드웨어 카운터(SM/메모리 처리율, 병목
     \item \textbf{값 불일치 해결 전략}: 에러 전이 가설에 기반하여, 값 불일치 에러에 특화된 피드백 메커니즘을 설계한다. 구체적으로 중간 텐서 값 비교, 수치 안정성 분석, 그리고 TritonForge~\cite{li2025tritonforge}에서 제안된 프로파일링 기반 최적화를 통합할 수 있다.
     \item \textbf{하이브리드 접근}: LLM 기반 초기 코드 생성과 Mirage~\cite{wu2025mirage}와 같은 수퍼옵티마이저(superoptimizer) 기반 후처리를 결합하는 하이브리드 파이프라인을 탐구한다.
     \item \textbf{RAG 기반 패턴 학습}: Retrieval-Augmented Generation을 통해 기존의 성공적인 Triton 커널 패턴을 LLM의 문맥(context)에 주입하여, 특히 Level 3 수준의 복잡한 커널 생성 능력을 향상시킨다.
+    \item \textbf{훈련 하니스 정합 이식}: Dr.Kernel~\cite{drkernel2026}의 STTS 문맥 관리 전략(보상 상위 $w$턴만 유지)을 KernelAgent 리파인 루프에 이식하였으며(\texttt{KA\_CONTEXT\_STRATEGY=best}), GLM-5.2의 Level~2 재도전 A/B는 부분 실행 후 중단되어 통계적 결론을 위한 완전 실행을 향후 과제로 남긴다.
 \end{enumerate}
 
 

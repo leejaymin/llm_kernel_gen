@@ -266,13 +266,14 @@ class LLMClient:
             try:
                 start_time = time.time()
 
+                stop_param = {"stop": stop} if stop else {}
                 response = self.client.completions.create(
                     model=model_name,
                     prompt=full_prompt,
                     temperature=temperature,
                     max_tokens=max_tokens,
                     top_p=top_p,
-                    stop=stop,
+                    **stop_param,
                 )
 
                 latency_ms = (time.time() - start_time) * 1000
@@ -728,10 +729,13 @@ class LLMClient:
                     sampling_params["temperature"] = temperature
                     sampling_params["top_p"] = top_p
 
+                # Gemini (via gateway) rejects an explicit "stop": null with
+                # INVALID_ARGUMENT("Value is not a string: null") — omit when unset.
+                stop_param = {"stop": stop} if stop else {}
                 response = self.client.chat.completions.create(
                     model=model_name,
                     messages=messages,
-                    stop=stop,
+                    **stop_param,
                     **sampling_params,
                     **token_param,
                 )

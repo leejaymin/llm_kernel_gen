@@ -39,6 +39,13 @@ class EvalResult:
     pytorch_time_ms: Optional[float] = None
     triton_time_ms: Optional[float] = None
     max_abs_error: Optional[float] = None
+    # Roofline view (AMK-style): speedup is relative to a baseline whose own
+    # quality varies by hardware (H100 cuBLAS is much stronger than Blackwell's
+    # current libraries), so we also report the absolute achieved HBM bandwidth
+    # against the device peak. memory-bound lower bound = io_bytes / peak_bw.
+    io_bytes: Optional[int] = None          # input + output tensor traffic (lower bound)
+    achieved_gbs: Optional[float] = None    # io_bytes / triton_time
+    hbm_util_pct: Optional[float] = None    # achieved / device peak * 100
 
 
 def _load_module_from_code(code: str, module_name: str) -> Tuple[Any, str]:
@@ -71,12 +78,109 @@ def _load_module_from_code(code: str, module_name: str) -> Tuple[Any, str]:
     return module, tmp_dir
 
 
+# Spec peak HBM bandwidth (GB/s) by device-name substring. Used for the
+# roofline view; override with LLM_KERNEL_PEAK_BW_GBS when the device is
+# missing or a custom figure is preferred. Values are vendor spec sheets.
+_PEAK_BW_GBS = {
+    "RTX PRO 6000 Blackwell": 1792.0,
+    "B200": 8000.0,
+    "H200": 4800.0,
+    "H100": 3350.0,   # SXM; PCIe is 2000
+    "A100": 1555.0,   # 40GB; 80GB SXM is 2039
+    "RTX A6000": 768.0,
+    "L40S": 864.0,
+    "RTX 5090": 1792.0,
+    "RTX 4090": 1008.0,
+}
+
+
+def _device_peak_bw_gbs() -> Optional[float]:
+    env = os.environ.get("LLM_KERNEL_PEAK_BW_GBS")
+    if env:
+        try:
+            return float(env)
+        except ValueError:
+            pass
+    try:
+        import torch
+        name = torch.cuda.get_device_name(0)
+    except Exception:
+        return None
+    for key, bw in _PEAK_BW_GBS.items():
+        if key in name:
+            return bw
+    return None
+
+
+def _tensor_bytes(obj) -> int:
+    import torch
+    if isinstance(obj, torch.Tensor):
+        return obj.numel() * obj.element_size()
+    if isinstance(obj, (list, tuple)):
+        return sum(_tensor_bytes(x) for x in obj)
+    return 0
+
+
 def _cleanup_temp_dir(tmp_dir: str) -> None:
     """Clean up temporary directory after evaluation."""
     try:
         shutil.rmtree(tmp_dir, ignore_errors=True)
     except Exception:
         pass  # Ignore cleanup errors
+
+
+def _chunked_compare(ref_t, gen_t, atol: float, rtol: float,
+                     chunk_elems: int = 64_000_000) -> dict:
+    """allclose + rich diagnostics computed over flat chunks.
+
+    A full-tensor comparison materialises abs-diff, tolerance and mask tensors
+    the same size as the output; on multi-GB outputs that triples peak VRAM and
+    OOMs 48 GB cards, falsely failing correct kernels. Chunking caps the
+    comparison overhead at ~3 chunk-sized temporaries (256 MB each).
+    """
+    import torch
+
+    ref_v = ref_t.reshape(-1)
+    gen_v = gen_t.reshape(-1)
+    n_tot = ref_v.numel()
+    max_abs = 0.0
+    max_rel = 0.0
+    n_bad = 0
+    worst_ref = worst_gen = 0.0
+    gen_absmax = 0.0
+    ref_sum = gen_sum = 0.0
+    ref_sumsq = gen_sumsq = 0.0
+    for s in range(0, n_tot, chunk_elems):
+        r = ref_v[s:s + chunk_elems].float()
+        g = gen_v[s:s + chunk_elems].float()
+        d = (r - g).abs()
+        m = d.max().item()
+        if m > max_abs:
+            max_abs = m
+            w = int(d.argmax().item())
+            worst_ref = r[w].item()
+            worst_gen = g[w].item()
+        bad = d > (atol + rtol * r.abs())
+        n_bad += int(bad.sum().item())
+        del bad
+        max_rel = max(max_rel, (d / r.abs().clamp_min(1e-12)).max().item())
+        gen_absmax = max(gen_absmax, g.abs().max().item())
+        ref_sum += r.sum().item(); gen_sum += g.sum().item()
+        ref_sumsq += (r * r).sum().item(); gen_sumsq += (g * g).sum().item()
+        del r, g, d
+    ref_mean = ref_sum / max(n_tot, 1)
+    gen_mean = gen_sum / max(n_tot, 1)
+    ref_std = max(ref_sumsq / max(n_tot, 1) - ref_mean ** 2, 0.0) ** 0.5
+    gen_std = max(gen_sumsq / max(n_tot, 1) - gen_mean ** 2, 0.0) ** 0.5
+    return {
+        "is_close": n_bad == 0,
+        "max_abs": max_abs, "max_rel": max_rel,
+        "n_bad": n_bad, "n_tot": n_tot,
+        "worst_ref": worst_ref, "worst_gen": worst_gen,
+        "gen_allzero": gen_absmax == 0.0,
+        "ref_mean": ref_mean, "ref_std": ref_std,
+        "gen_mean": gen_mean, "gen_std": gen_std,
+    }
 
 
 def _cuda_timed_run(fn, inputs: tuple, n_warmup: int, n_timed: int) -> float:
@@ -244,6 +348,13 @@ class KernelEvaluator:
                     ref_output = ref_model(*inputs)
                     gen_output = gen_model(*inputs)
 
+                # Inputs are no longer needed once both outputs exist; on
+                # multi-GB problems (P19+ activations) keeping them alive
+                # pushes the comparison below over the VRAM limit of 48 GB
+                # cards even though the kernel itself is correct.
+                del inputs
+                torch.cuda.empty_cache()
+
                 # Handle tuple/list outputs
                 if isinstance(ref_output, (tuple, list)):
                     ref_tensors = ref_output
@@ -280,23 +391,13 @@ class KernelEvaluator:
                             max_abs_error=max_abs_error,
                         )
 
-                    ref_f, gen_f = ref_t.float(), gen_t.float()
-                    abs_diff = (ref_f - gen_f).abs()
-                    trial_max = abs_diff.max().item()
+                    cmp = _chunked_compare(ref_t, gen_t, self.atol, self.rtol)
+                    trial_max = cmp["max_abs"]
                     max_abs_error = max(max_abs_error, trial_max)
 
-                    if not torch.allclose(
-                        ref_f, gen_f, atol=self.atol, rtol=self.rtol
-                    ):
+                    if not cmp["is_close"]:
                         # Rich diagnostics so the refinement prompt can pinpoint
                         # the failure (scale error, all-zeros, dtype mismatch, ...).
-                        tol = self.atol + self.rtol * ref_f.abs()
-                        bad = abs_diff > tol
-                        n_bad, n_tot = int(bad.sum().item()), bad.numel()
-                        max_rel = (abs_diff / ref_f.abs().clamp_min(1e-12)).max().item()
-                        w = int(abs_diff.flatten().argmax().item())
-                        rv = ref_f.flatten()[w].item()
-                        gv = gen_f.flatten()[w].item()
                         dtype_note = (
                             f" | dtype differs (ref={ref_t.dtype}, gen={gen_t.dtype}) — "
                             f"output must match the reference dtype"
@@ -305,16 +406,17 @@ class KernelEvaluator:
                         zero_note = (
                             " | generated output is ALL ZEROS (kernel likely not "
                             "writing results / wrong grid or mask)"
-                            if gen_f.abs().max().item() == 0.0 else ""
+                            if cmp["gen_allzero"] else ""
                         )
                         err = (
                             f"Numerical mismatch on output {idx} (trial {trial}): "
-                            f"max_abs_error={trial_max:.3e}, max_rel_error={max_rel:.3e}, "
-                            f"{n_bad}/{n_tot} ({100.0 * n_bad / max(n_tot, 1):.1f}%) elements "
+                            f"max_abs_error={trial_max:.3e}, max_rel_error={cmp['max_rel']:.3e}, "
+                            f"{cmp['n_bad']}/{cmp['n_tot']} "
+                            f"({100.0 * cmp['n_bad'] / max(cmp['n_tot'], 1):.1f}%) elements "
                             f"exceed tolerance (atol={self.atol}, rtol={self.rtol}). "
-                            f"Worst element: ref={rv:.6g} vs gen={gv:.6g}. "
-                            f"ref[mean={ref_f.mean().item():.4g}, std={ref_f.std().item():.4g}], "
-                            f"gen[mean={gen_f.mean().item():.4g}, std={gen_f.std().item():.4g}]"
+                            f"Worst element: ref={cmp['worst_ref']:.6g} vs gen={cmp['worst_gen']:.6g}. "
+                            f"ref[mean={cmp['ref_mean']:.4g}, std={cmp['ref_std']:.4g}], "
+                            f"gen[mean={cmp['gen_mean']:.4g}, std={cmp['gen_std']:.4g}]"
                             f"{dtype_note}{zero_note}"
                         )
                         logger.error("%s%s", pid_tag, err)
@@ -330,7 +432,7 @@ class KernelEvaluator:
                 # KernelBench inputs can be multi-GB (e.g. P19 ReLU is
                 # 4096x393216 = 6 GB); without this, n_correctness trials
                 # accumulate and OOM the GPU, falsely failing correct kernels.
-                del ref_output, gen_output, inputs, ref_tensors, gen_tensors
+                del ref_output, gen_output, ref_tensors, gen_tensors
                 torch.cuda.empty_cache()
 
             logger.info(
@@ -368,6 +470,21 @@ class KernelEvaluator:
 
             speedup = pytorch_ms / triton_ms if triton_ms > 0 else 0.0
 
+            # Roofline view: io traffic lower bound = inputs + one output pass.
+            io_bytes = achieved_gbs = hbm_util_pct = None
+            try:
+                with torch.no_grad():
+                    out_probe = gen_model(*inputs)
+                io_bytes = _tensor_bytes(inputs) + _tensor_bytes(out_probe)
+                del out_probe
+                if io_bytes and triton_ms and triton_ms > 0:
+                    achieved_gbs = io_bytes / (triton_ms * 1e-3) / 1e9
+                    peak = _device_peak_bw_gbs()
+                    if peak:
+                        hbm_util_pct = achieved_gbs / peak * 100.0
+            except Exception:  # noqa: BLE001 — roofline is informational only
+                pass
+
             logger.info(
                 "%sPerformance: pytorch=%.3fms, triton=%.3fms, speedup=%.2fx",
                 pid_tag, pytorch_ms, triton_ms, speedup,
@@ -383,6 +500,9 @@ class KernelEvaluator:
                 pytorch_time_ms=pytorch_ms,
                 triton_time_ms=triton_ms,
                 max_abs_error=max_abs_error,
+                io_bytes=io_bytes,
+                achieved_gbs=achieved_gbs,
+                hbm_util_pct=hbm_util_pct,
             )
 
         except Exception as exc:
