@@ -1,0 +1,1647 @@
+@inproceedings{LCTES25-ML2Tuner,
+  title        = {Multi-level Machine Learning-Guided Autotuning for Efficient Code Generation on a Deep Learning Accelerator},
+  author       = {JooHyoung Cha and Munyoung Lee and Jinse Kwon and Jemin Lee and Yongin Kwon},
+  booktitle    = {Proceedings of the 26th ACM SIGPLAN/SIGBED International Conference on Languages, Compilers, and Tools for Embedded Systems (LCTES '25)},
+  year         = {2025},
+  pages        = {134--145},
+  doi          = {10.1145/3735452.3735538},
+  publisher    = {Association for Computing Machinery},
+  url          = {https://doi.org/10.1145/3735452.3735538}
+}
+
+
+@software{Ni_ncnn_2017,
+author = {Ni, Hui and {The ncnn contributors}},
+license = {BSD-3-Clause},
+month = jun,
+title = {{ncnn}},
+url = {https://github.com/Tencent/ncnn},
+year = {2017}
+}
+
+@software{oneDNN_Contributors_oneAPI_Deep_Neural,
+author = {{oneDNN Contributors}},
+license = {Apache-2.0},
+title = {{oneAPI Deep Neural Network Library (oneDNN)}},
+url = {https://github.com/uxlfoundation/oneDNN},
+version = {v3.7}
+}
+
+@article{scikit-learn,
+  author  = {Fabian Pedregosa and Ga{{\"e}}l Varoquaux and Alexandre Gramfort and Vincent Michel and Bertrand Thirion and Olivier Grisel and Mathieu Blondel and Peter Prettenhofer and Ron Weiss and Vincent Dubourg and Jake Vanderplas and Alexandre Passos and David Cournapeau and Matthieu Brucher and Matthieu Perrot and {{\'E}}douard Duchesnay},
+  title   = {Scikit-learn: Machine Learning in Python},
+  journal = {Journal of Machine Learning Research},
+  year    = {2011},
+  volume  = {12},
+  number  = {85},
+  pages   = {2825--2830},
+  url     = {http://jmlr.org/papers/v12/pedregosa11a.html}
+}
+
+@article{binary_Imbalance-XGBoost,
+author = {Wang, Chen and Deng, Chengyuan and Wang, Suzhen},
+year = {2020},
+month = {06},
+pages = {},
+title = {Imbalance-XGBoost: leveraging weighted and focal losses for binary label-imbalanced classification with XGBoost},
+volume = {136},
+journal = {Pattern Recognition Letters},
+doi = {10.1016/j.patrec.2020.05.035}
+}
+
+@techreport{xgboost_rank,
+author = {Burges, Chris J.C.},
+title = {From RankNet to LambdaRank to LambdaMART: An Overview},
+year = {2010},
+month = {June},
+abstract = {LambdaMART is the boosted tree version of LambdaRank, which is based on RankNet. RankNet, LambdaRank, and LambdaMART have proven to be very successful algorithms for solving real world ranking problems: for example an ensemble of LambdaMART rankers won Track 1 of the 2010 Yahoo! Learning To Rank Challenge. The details of these algorithms are spread across several papers and reports, and so here we give a self-contained, detailed and complete description of them.},
+url = {https://www.microsoft.com/en-us/research/publication/from-ranknet-to-lambdarank-to-lambdamart-an-overview/},
+number = {MSR-TR-2010-82},
+}
+
+@misc{HW_Aware_Initialization,
+      title={HW-Aware Initialization of DNN Auto-Tuning to Improve Exploration Time and Robustness}, 
+      author={Dennis Rieber and Moritz Reiber and Oliver Bringmann and Holger Fröning},
+      year={2022},
+      eprint={2205.15568},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2205.15568}, 
+}
+@inproceedings{NNSmith_for_TVM_TensorRT,
+author = {Liu, Jiawei and Lin, Jinkun and Ruffy, Fabian and Tan, Cheng and Li, Jinyang and Panda, Aurojit and Zhang, Lingming},
+title = {NNSmith: Generating Diverse and Valid Test Cases for Deep Learning Compilers},
+year = {2023},
+isbn = {9781450399166},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3575693.3575707},
+doi = {10.1145/3575693.3575707},
+abstract = {Deep-learning (DL) compilers such as TVM and TensorRT are increasingly being used to optimize deep neural network (DNN) models to meet performance, resource utilization and other requirements. Bugs in these compilers can result in models whose semantics differ from the original ones, producing incorrect results that corrupt the correctness of downstream applications. However, finding bugs in these compilers is challenging due to their complexity. In this work, we propose a new fuzz testing approach for finding bugs in deep-learning compilers. Our core approach consists of (i) generating diverse yet valid DNN test models that can exercise a large part of the compiler's transformation logic using light-weight operator specifications; (ii) performing gradient-based search to find model inputs that avoid any floating-point exceptional values during model execution, reducing the chance of missed bugs or false alarms; and (iii) using differential testing to identify bugs. We implemented this approach in NNSmith which has found 72 new bugs for TVM, TensorRT, ONNXRuntime, and PyTorch to date. Of these 58 have been confirmed and 51 have been fixed by their respective project maintainers.},
+booktitle = {Proceedings of the 28th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 2},
+pages = {530–543},
+numpages = {14},
+keywords = {Compiler Testing, Deep Learning Compilers, Fuzzing},
+location = {Vancouver, BC, Canada},
+series = {ASPLOS 2023}
+}
+
+
+@misc{rl_based_optimization_arco,
+      title={ARCO:Adaptive Multi-Agent Reinforcement Learning-Based Hardware/Software Co-Optimization Compiler for Improved Performance in DNN Accelerator Design}, 
+      author={Arya Fayyazi and Mehdi Kamal and Massoud Pedram},
+      year={2024},
+      eprint={2407.08192},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2407.08192}, 
+}
+
+@inproceedings{
+dynatune_zhang2021,
+title={DynaTune: Dynamic Tensor Program Optimization in Deep Neural Network Compilation},
+author={Minjia Zhang and Menghao Li and Chi Wang and Mingqin Li},
+booktitle={International Conference on Learning Representations},
+year={2021},
+url={https://openreview.net/forum?id=GTGb3M_KcUl}
+}
+
+@inproceedings{test_case_for_dlc,
+author = {Liu, Jiawei and Lin, Jinkun and Ruffy, Fabian and Tan, Cheng and Li, Jinyang and Panda, Aurojit and Zhang, Lingming},
+title = {NNSmith: Generating Diverse and Valid Test Cases for Deep Learning Compilers},
+year = {2023},
+isbn = {9781450399166},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3575693.3575707},
+doi = {10.1145/3575693.3575707},
+abstract = {Deep-learning (DL) compilers such as TVM and TensorRT are increasingly being used to optimize deep neural network (DNN) models to meet performance, resource utilization and other requirements. Bugs in these compilers can result in models whose semantics differ from the original ones, producing incorrect results that corrupt the correctness of downstream applications. However, finding bugs in these compilers is challenging due to their complexity. In this work, we propose a new fuzz testing approach for finding bugs in deep-learning compilers. Our core approach consists of (i) generating diverse yet valid DNN test models that can exercise a large part of the compiler's transformation logic using light-weight operator specifications; (ii) performing gradient-based search to find model inputs that avoid any floating-point exceptional values during model execution, reducing the chance of missed bugs or false alarms; and (iii) using differential testing to identify bugs. We implemented this approach in NNSmith which has found 72 new bugs for TVM, TensorRT, ONNXRuntime, and PyTorch to date. Of these 58 have been confirmed and 51 have been fixed by their respective project maintainers.},
+booktitle = {Proceedings of the 28th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 2},
+pages = {530–543},
+numpages = {14},
+keywords = {Fuzzing, Deep Learning Compilers, Compiler Testing},
+location = {Vancouver, BC, Canada},
+series = {ASPLOS 2023}
+}
+
+@ARTICLE{ai_memory_wall,
+  author={Gholami, Amir and Yao, Zhewei and Kim, Sehoon and Hooper, Coleman and Mahoney, Michael W. and Keutzer, Kurt},
+  journal={IEEE Micro}, 
+  title={AI and Memory Wall}, 
+  year={2024},
+  volume={44},
+  number={3},
+  pages={33-39},
+  keywords={Computational modeling;Training data;Transformers;Bandwidth;Arithmetic;Hardware;Data models;Unsupervised learning;Artificial intelligence;Memory management},
+  doi={10.1109/MM.2024.3373763}}
+@book{ai_ha,
+  title={Artificial Intelligence and Hardware Accelerators},
+  author={Mishra, Ashutosh and Cha, Jaekwang and Park, Hyunbin and Kim, Shiho},
+  year={2023},
+  publisher={Springer}
+}
+@misc{mxnet_chen2015mxnetflexibleefficientmachine,
+      title={MXNet: A Flexible and Efficient Machine Learning Library for Heterogeneous Distributed Systems}, 
+      author={Tianqi Chen and Mu Li and Yutian Li and Min Lin and Naiyan Wang and Minjie Wang and Tianjun Xiao and Bing Xu and Chiyuan Zhang and Zheng Zhang},
+      year={2015},
+      eprint={1512.01274},
+      archivePrefix={arXiv},
+      primaryClass={cs.DC},
+      url={https://arxiv.org/abs/1512.01274}, 
+}
+@article{random_search_hyper_parameter_optimization,
+author = {Bergstra, James and Bengio, Yoshua},
+title = {Random search for hyper-parameter optimization},
+year = {2012},
+issue_date = {3/1/2012},
+publisher = {JMLR.org},
+volume = {13},
+number = {null},
+issn = {1532-4435},
+abstract = {Grid search and manual search are the most widely used strategies for hyper-parameter optimization. This paper shows empirically and theoretically that randomly chosen trials are more efficient for hyper-parameter optimization than trials on a grid. Empirical evidence comes from a comparison with a large previous study that used grid search and manual search to configure neural networks and deep belief networks. Compared with neural networks configured by a pure grid search, we find that random search over the same domain is able to find models that are as good or better within a small fraction of the computation time. Granting random search the same computational budget, random search finds better models by effectively searching a larger, less promising configuration space. Compared with deep belief networks configured by a thoughtful combination of manual search and grid search, purely random search over the same 32-dimensional configuration space found statistically equal performance on four of seven data sets, and superior performance on one of seven. A Gaussian process analysis of the function from hyper-parameters to validation set performance reveals that for most data sets only a few of the hyper-parameters really matter, but that different hyper-parameters are important on different data sets. This phenomenon makes grid search a poor choice for configuring algorithms for new data sets. Our analysis casts some light on why recent "High Throughput" methods achieve surprising success--they appear to search through a large number of hyper-parameters because most hyper-parameters do not matter much. We anticipate that growing interest in large hierarchical models will place an increasing burden on techniques for hyper-parameter optimization; this work shows that random search is a natural baseline against which to judge progress in the development of adaptive (sequential) hyper-parameter optimization algorithms.},
+journal = {J. Mach. Learn. Res.},
+month = {feb},
+pages = {281–305},
+numpages = {25},
+keywords = {deep learning, global optimization, model selection, neural networks, response surface modeling}
+}
+@inproceedings{numba_llvm,
+author = {Lam, Siu Kwan and Pitrou, Antoine and Seibert, Stanley},
+title = {Numba: a LLVM-based Python JIT compiler},
+year = {2015},
+isbn = {9781450340052},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/2833157.2833162},
+doi = {10.1145/2833157.2833162},
+abstract = {Dynamic, interpreted languages, like Python, are attractive for domain-experts and scientists experimenting with new ideas. However, the performance of the interpreter is often a barrier when scaling to larger data sets. This paper presents a just-in-time compiler for Python that focuses in scientific and array-oriented computing. Starting with the simple syntax of Python, Numba compiles a subset of the language into efficient machine code that is comparable in performance to a traditional compiled language. In addition, we share our experience in building a JIT compiler using LLVM[1].},
+booktitle = {Proceedings of the Second Workshop on the LLVM Compiler Infrastructure in HPC},
+articleno = {7},
+numpages = {6},
+keywords = {LLVM, Python, compiler},
+location = {Austin, Texas},
+series = {LLVM '15}
+}
+@misc{epoch2023aitrends,
+  title={Key Trends and Figures in Machine Learning},
+  author={{Epoch AI}},
+  year={2023},
+  url={https://epochai.org/trends},
+  note={Accessed: 2025-03-21}
+}
+
+@INPROCEEDINGS{alt_failure,
+  author={Zeng, Xi and Zhi, Tian and Du, Zidong and Guo, Qi and Sun, Ninghui and Chen, Yunji},
+  booktitle={2020 IEEE 38th International Conference on Computer Design (ICCD)}, 
+  title={ALT: Optimizing Tensor Compilation in Deep Learning Compilers with Active Learning}, 
+  year={2020},
+  volume={},
+  number={},
+  pages={623-630},
+  keywords={Deep learning;Tensors;Uncertainty;Computational modeling;Neural networks;Optimal scheduling;Tuning;deep learning compiler;tensor compilation;active learning},
+  doi={10.1109/ICCD50377.2020.00108}}
+
+@ARTICLE{tvm_vta_failure_DiagNNose,
+  author={Kundu, Shamik and Banerjee, Suvadeep and Raha, Arnab and Natarajan, Suriyaprakash and Basu, Kanad},
+  journal={IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems}, 
+  title={DiagNNose: Toward Error Localization in Deep Learning Hardware-Based on VTA-TVM Stack}, 
+  year={2024},
+  volume={43},
+  number={1},
+  pages={217-229},
+  keywords={Circuit faults;Location awareness;Life estimation;Computational modeling;Tensors;Feature extraction;Deep learning;Deep learning (DL);fault diagnosis;functional safety (FuSa);versatile tensor accelerator (VTA)},
+  doi={10.1109/TCAD.2023.3303851}}
+
+
+
+@inproceedings{heron_vta_contents_invalid,
+author = {Bi, Jun and Guo, Qi and Li, Xiaqing and Zhao, Yongwei and Wen, Yuanbo and Guo, Yuxuan and Zhou, Enshuai and Hu, Xing and Du, Zidong and Li, Ling and Chen, Huaping and Chen, Tianshi},
+title = {Heron: Automatically Constrained High-Performance Library Generation for Deep Learning Accelerators},
+year = {2023},
+isbn = {9781450399180},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3582016.3582061},
+doi = {10.1145/3582016.3582061},
+abstract = {Deep Learning Accelerators (DLAs) are effective to improve both performance and energy efficiency of compute-intensive deep learning algorithms. A flexible and portable mean to exploit DLAs is using high-performance software libraries with well-established APIs, which are typically either manually implemented or automatically generated by exploration-based compilation approaches. Though exploration-based approaches significantly reduce programming efforts, they fail to find optimal or near-optimal programs from a large but low-quality search space because the massive inherent constraints of DLAs cannot be accurately characterized.  
+In this paper, we propose Heron, a novel exploration-based approach, to efficiently generate high-performance libraries of DLAs. The key is to automatically (rather than manually) enforce massive sophisticated while accurate constraints through the entire program generation including constrained space generation and constrained space exploration. By conducting static analysis on compute, sophisticated constraints are automatically generated to properly characterize inherent constraints of DLAs, and thus greatly prune invalid program candidates to produce a high-quality constrained search space. To efficiently explore the resultant search space, we further propose a novel constraint-based genetic algorithm, which features that the evolutionary process is conducted on formulated constraint satisfactory problems instead of concrete solutions. Thus, the sophisticated constraints of the search space are strictly preserved during the entire exploration process.  
+We conduct extensive experiments on 3 representative DLAs, i.e., NVIDIA TensorCore, Intel DL Boost Acceleration, and TVM Versatile Tensor Accelerator. Experimental results demonstrate that Heron averagely achieves 2.71x speedup over four state-of-the-art automatic generation approaches. Also, compared to vendor-provided hand-tuned libraries, Heron achieves 2.00x speedup on average.},
+booktitle = {Proceedings of the 28th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 3},
+pages = {314–328},
+numpages = {15},
+keywords = {code generation, compiler optimization, tensor computation},
+location = {Vancouver, BC, Canada},
+series = {ASPLOS 2023}
+}
+
+@inproceedings{llvm_papers,
+author = {Lattner, Chris and Adve, Vikram},
+title = {LLVM: A Compilation Framework for Lifelong Program Analysis \& Transformation},
+year = {2004},
+isbn = {0769521029},
+publisher = {IEEE Computer Society},
+address = {USA},
+abstract = {This paper describes LLVM (Low Level Virtual Machine),a compiler framework designed to support transparent, lifelongprogram analysis and transformation for arbitrary programs,by providing high-level information to compilertransformations at compile-time, link-time, run-time, and inidle time between runs.LLVM defines a common, low-levelcode representation in Static Single Assignment (SSA) form,with several novel features: a simple, language-independenttype-system that exposes the primitives commonly used toimplement high-level language features; an instruction fortyped address arithmetic; and a simple mechanism that canbe used to implement the exception handling features ofhigh-level languages (and setjmp/longjmp in C) uniformlyand efficiently.The LLVM compiler framework and coderepresentation together provide a combination of key capabilitiesthat are important for practical, lifelong analysis andtransformation of programs.To our knowledge, no existingcompilation approach provides all these capabilities.We describethe design of the LLVM representation and compilerframework, and evaluate the design in three ways: (a) thesize and effectiveness of the representation, including thetype information it provides; (b) compiler performance forseveral interprocedural problems; and (c) illustrative examplesof the benefits LLVM provides for several challengingcompiler problems.},
+booktitle = {Proceedings of the International Symposium on Code Generation and Optimization: Feedback-Directed and Runtime Optimization},
+pages = {75},
+location = {Palo Alto, California},
+series = {CGO '04}
+}
+
+
+@inproceedings{tpu_v4_google,
+author = {Jouppi, Norm and et al},
+title = {TPU v4: An Optically Reconfigurable Supercomputer for Machine Learning with Hardware Support for Embeddings},
+year = {2023},
+isbn = {9798400700958},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3579371.3589350},
+doi = {10.1145/3579371.3589350},
+abstract = {In response to innovations in machine learning (ML) models, production workloads changed radically and rapidly. TPU v4 is the fifth Google domain specific architecture (DSA) and its third supercomputer for such ML models. Optical circuit switches (OCSes) dynamically reconfigure its interconnect topology to improve scale, availability, utilization, modularity, deployment, security, power, and performance; users can pick a twisted 3D torus topology if desired. Much cheaper, lower power, and faster than Infiniband, OCSes and underlying optical components are <5\% of system cost and <3\% of system power. Each TPU v4 includes SparseCores, dataflow processors that accelerate models that rely on embeddings by 5x--7x yet use only 5\% of die area and power. Deployed since 2020, TPU v4 outperforms TPU v3 by 2.1x and improves performance/Watt by 2.7x. The TPU v4 supercomputer is 4x larger at 4096 chips and thus nearly 10x faster overall, which along with OCS flexibility and availability allows a large language model to train at an average of ~60\% of peak FLOPS/second. For similar sized systems, it is ~4.3x--4.5x faster than the Graphcore IPU Bow and is 1.2x--1.7x faster and uses 1.3x--1.9x less power than the Nvidia A100. TPU v4s inside the energy-optimized warehouse scale computers of Google Cloud use ~2--6x less energy and produce ~20x less CO2e than contemporary DSAs in typical on-premise data centers.},
+booktitle = {Proceedings of the 50th Annual International Symposium on Computer Architecture},
+articleno = {82},
+numpages = {14},
+keywords = {CO2 equivalent emissions, energy, carbon emissions, warehouse scale computer, power usage effectiveness, large language model, embeddings, reconfigurable, optical interconnect, supercomputer, IPU, GPU, TPU, domain specific architecture, machine learning},
+location = {Orlando, FL, USA},
+series = {ISCA '23}
+}
+
+
+
+@inproceedings{10.1145/2491956.2462176,
+author = {Ragan-Kelley, Jonathan and Barnes, Connelly and Adams, Andrew and Paris, Sylvain and Durand, Fr\'{e}do and Amarasinghe, Saman},
+title = {Halide: a language and compiler for optimizing parallelism, locality, and recomputation in image processing pipelines},
+year = {2013},
+isbn = {9781450320146},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/2491956.2462176},
+doi = {10.1145/2491956.2462176},
+abstract = {Image processing pipelines combine the challenges of stencil computations and stream programs. They are composed of large graphs of different stencil stages, as well as complex reductions, and stages with global or data-dependent access patterns. Because of their complex structure, the performance difference between a naive implementation of a pipeline and an optimized one is often an order of magnitude. Efficient implementations require optimization of both parallelism and locality, but due to the nature of stencils, there is a fundamental tension between parallelism, locality, and introducing redundant recomputation of shared values.We present a systematic model of the tradeoff space fundamental to stencil pipelines, a schedule representation which describes concrete points in this space for each stage in an image processing pipeline, and an optimizing compiler for the Halide image processing language that synthesizes high performance implementations from a Halide algorithm and a schedule. Combining this compiler with stochastic search over the space of schedules enables terse, composable programs to achieve state-of-the-art performance on a wide range of real image processing pipelines, and across different hardware architectures, including multicores with SIMD, and heterogeneous CPU+GPU execution. From simple Halide programs written in a few hours, we demonstrate performance up to 5x faster than hand-tuned C, intrinsics, and CUDA implementations optimized by experts over weeks or months, for image processing applications beyond the reach of past automatic compilers.},
+booktitle = {Proceedings of the 34th ACM SIGPLAN Conference on Programming Language Design and Implementation},
+pages = {519–530},
+numpages = {12},
+keywords = {autotuning, compiler, domain specific language, gpu, image processing, locality, optimization, parallelism, redundant computation, vectorization},
+location = {Seattle, Washington, USA},
+series = {PLDI '13}
+}
+ @MISC{eigenweb,
+  author = {Ga\"{e}l Guennebaud and Beno\^{i}t Jacob and others},
+  title = {Eigen v3},
+  howpublished = {http://eigen.tuxfamily.org},
+  year = {2010}
+ }
+@inproceedings{bayesian_otpimization_NIPS2012_05311655,
+ author = {Snoek, Jasper and Larochelle, Hugo and Adams, Ryan P},
+ booktitle = {Advances in Neural Information Processing Systems},
+ editor = {F. Pereira and C.J. Burges and L. Bottou and K.Q. Weinberger},
+ pages = {},
+ publisher = {Curran Associates, Inc.},
+ title = {Practical Bayesian Optimization of Machine Learning Algorithms},
+ url = {https://proceedings.neurips.cc/paper_files/paper/2012/file/05311655a15b75fab86956663e1819cd-Paper.pdf},
+ volume = {25},
+ year = {2012}
+}
+
+@inproceedings{vizier_blackbox_optimization,
+author = {Golovin, Daniel and Solnik, Benjamin and Moitra, Subhodeep and Kochanski, Greg and Karro, John and Sculley, D.},
+title = {Google Vizier: A Service for Black-Box Optimization},
+year = {2017},
+isbn = {9781450348874},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3097983.3098043},
+doi = {10.1145/3097983.3098043},
+abstract = {Any sufficiently complex system acts as a black box when it becomes easier to experiment with than to understand. Hence, black-box optimization has become increasingly important as systems have become more complex. In this paper we describe Google Vizier, a Google-internal service for performing black-box optimization that has become the de facto parameter tuning engine at Google. Google Vizier is used to optimize many of our machine learning models and other systems, and also provides core capabilities to Google's Cloud Machine Learning HyperTune subsystem. We discuss our requirements, infrastructure design, underlying algorithms, and advanced features such as transfer learning and automated early stopping that the service provides.},
+booktitle = {Proceedings of the 23rd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining},
+pages = {1487–1495},
+numpages = {9},
+keywords = {bayesian inference, black-box optimization, gaussian process, machine learning},
+location = {Halifax, NS, Canada},
+series = {KDD '17}
+}
+
+@ARTICLE{review_bayesian_opt,
+  author={Shahriari, Bobak and Swersky, Kevin and Wang, Ziyu and Adams, Ryan P. and de Freitas, Nando},
+  journal={Proceedings of the IEEE}, 
+  title={Taking the Human Out of the Loop: A Review of Bayesian Optimization}, 
+  year={2016},
+  volume={104},
+  number={1},
+  pages={148-175},
+  keywords={Big data;Bayes methods;Linear programming;Decision making;Design of experiments;Optimization;Genomes;Statistical analysis;decision making;design of experiments;optimization;response surface methodology;statistical learning;genomic medicine;Decision making;design of experiments;optimization;response surface methodology;statistical learning},
+  doi={10.1109/JPROC.2015.2494218}}
+
+
+
+@techreport{intel_gaudi3_2024,
+  title = {Intel Gaudi 3 AI Accelerator White Paper},
+  author = {Intel Corporation},
+  year = {2024},
+  institution = {Intel},
+  type = {White Paper},
+  url = {https://www.intel.com/content/www/us/en/content-details/817486/intel-gaudi-3-ai-accelerator-white-paper.html},
+  note = {Version 1.1},
+  month = {June},
+  number = {817486}
+}
+@article{halide_optimizing_parallelism,
+author = {Ragan-Kelley, Jonathan and Barnes, Connelly and Adams, Andrew and Paris, Sylvain and Durand, Fr\'{e}do and Amarasinghe, Saman},
+title = {Halide: a language and compiler for optimizing parallelism, locality, and recomputation in image processing pipelines},
+year = {2013},
+issue_date = {June 2013},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {48},
+number = {6},
+issn = {0362-1340},
+url = {https://doi.org/10.1145/2499370.2462176},
+doi = {10.1145/2499370.2462176},
+abstract = {Image processing pipelines combine the challenges of stencil computations and stream programs. They are composed of large graphs of different stencil stages, as well as complex reductions, and stages with global or data-dependent access patterns. Because of their complex structure, the performance difference between a naive implementation of a pipeline and an optimized one is often an order of magnitude. Efficient implementations require optimization of both parallelism and locality, but due to the nature of stencils, there is a fundamental tension between parallelism, locality, and introducing redundant recomputation of shared values.We present a systematic model of the tradeoff space fundamental to stencil pipelines, a schedule representation which describes concrete points in this space for each stage in an image processing pipeline, and an optimizing compiler for the Halide image processing language that synthesizes high performance implementations from a Halide algorithm and a schedule. Combining this compiler with stochastic search over the space of schedules enables terse, composable programs to achieve state-of-the-art performance on a wide range of real image processing pipelines, and across different hardware architectures, including multicores with SIMD, and heterogeneous CPU+GPU execution. From simple Halide programs written in a few hours, we demonstrate performance up to 5x faster than hand-tuned C, intrinsics, and CUDA implementations optimized by experts over weeks or months, for image processing applications beyond the reach of past automatic compilers.},
+journal = {SIGPLAN Not.},
+month = {jun},
+pages = {519–530},
+numpages = {12},
+keywords = {vectorization, redundant computation, parallelism, optimization, locality, image processing, gpu, domain specific language, compiler, autotuning}
+}
+
+
+
+@misc{xla_compiler,title	= {XLA : Compiling Machine Learning for Peak Performance},author	= {Amit Sabne},year	= {2020}}
+
+
+@inproceedings{mlir,title	= {MLIR: Scaling Compiler Infrastructure for Domain Specific Computation},author	= {Chris Lattner and Mehdi Amini and Uday Bondhugula and Albert Cohen and Andy Davis and Jacques Arnaud Pienaar and River Riddle and Tatiana Shpeisman and Nicolas Vasilache and Oleksandr Zinenko},year	= {2021},booktitle	= {CGO 2021}}
+
+@inproceedings{tvm_Chen2018TVMAA,
+  title={TVM: An Automated End-to-End Optimizing Compiler for Deep Learning},
+  author={Tianqi Chen and Thierry Moreau and Ziheng Jiang and Lianmin Zheng and Eddie Q. Yan and Haichen Shen and Meghan Cowan and Leyuan Wang and Yuwei Hu and Luis Ceze and Carlos Guestrin and Arvind Krishnamurthy},
+  booktitle={USENIX Symposium on Operating Systems Design and Implementation},
+  year={2018},
+  url={https://api.semanticscholar.org/CorpusID:52939079}
+}
+
+@software{tensorflow_Abadi_TensorFlow_Large-scale_machine_2015,
+author = {Abadi, Martín and et al},
+doi = {10.5281/zenodo.4724125},
+license = {Apache-2.0},
+month = nov,
+title = {{TensorFlow, Large-scale machine learning on heterogeneous systems}},
+year = {2015}
+}
+
+@inproceedings{pytorch_Ansel_PyTorch_2_Faster_2024,
+author = {Ansel, Jason and et al},
+doi = {10.1145/3620665.3640366},
+month = apr,
+publisher = {ACM},
+title = {{PyTorch 2: Faster Machine Learning Through Dynamic Python Bytecode Transformation and Graph Compilation}},
+url = {https://pytorch.org/assets/pytorch2-2.pdf},
+year = {2024}
+}
+
+@software{onnxruntime_ONNX_Runtime_developers_ONNX_Runtime_2018,
+author = {{ONNX Runtime developers}},
+license = {MIT},
+month = nov,
+title = {{ONNX Runtime}},
+url = {https://github.com/microsoft/onnxruntime},
+year = {2018}
+}
+
+
+@misc{vta_moreau2019hardwaresoftwareblueprintflexibledeep,
+      title={A Hardware-Software Blueprint for Flexible Deep Learning Specialization}, 
+      author={Thierry Moreau and Tianqi Chen and Luis Vega and Jared Roesch and Eddie Yan and Lianmin Zheng and Josh Fromm and Ziheng Jiang and Luis Ceze and Carlos Guestrin and Arvind Krishnamurthy},
+      year={2019},
+      eprint={1807.04188},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/1807.04188}, 
+}
+
+@misc{liashchynskyi2019gridsearchrandomsearch,
+      title={Grid Search, Random Search, Genetic Algorithm: A Big Comparison for NAS}, 
+      author={Petro Liashchynskyi and Pavlo Liashchynskyi},
+      year={2019},
+      eprint={1912.06059},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/1912.06059}, 
+}
+@misc{inception_v3_szegedy2015rethinkinginceptionarchitecturecomputer,
+      title={Rethinking the Inception Architecture for Computer Vision}, 
+      author={Christian Szegedy and Vincent Vanhoucke and Sergey Ioffe and Jonathon Shlens and Zbigniew Wojna},
+      year={2015},
+      eprint={1512.00567},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/1512.00567}, 
+}
+@misc{ray_tune_based_on_reinforcement,
+      title={Tune: A Research Platform for Distributed Model Selection and Training}, 
+      author={Richard Liaw and Eric Liang and Robert Nishihara and Philipp Moritz and Joseph E. Gonzalez and Ion Stoica},
+      year={2018},
+      eprint={1807.05118},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/1807.05118}, 
+}
+
+@inproceedings{AdaTune,
+author = {Li, Menghao and Zhang, Minjia and Wang, Chi and Li, Mingqin},
+title = {AdaTune: adaptive tensor program compilation made efficient},
+year = {2020},
+isbn = {9781713829546},
+publisher = {Curran Associates Inc.},
+address = {Red Hook, NY, USA},
+abstract = {Deep learning models are computationally intense, and implementations often have to be highly optimized by experts or hardware vendors to be usable in practice. The DL compiler, together with Learning-to-Compile has proven to be a powerful technique for optimizing tensor programs. However, a limitation of this approach is that it still suffers from unbearably long overall optimization time. In this paper, we present a new method, called AdaTune, that significantly reduces the optimization time of tensor programs for high-performance deep learning inference. In particular, we propose an adaptive evaluation method that statistically early terminates a costly hardware measurement without losing much accuracy. We further devise a surrogate model with uncertainty quantification that allows the optimization to adapt to hardware and model heterogeneity better. Finally, we introduce a contextual optimizer that provides adaptive control of the exploration and exploitation to improve the transformation space searching effectiveness. We evaluate and compare the levels of optimization obtained by AutoTVM, a state-of-the-art Learning-to-Compile technique on top of TVM, and AdaTune. The experiment results show that AdaTune obtains up to 115\% higher GFLOPS than the baseline under the same optimization time budget. Furthermore, AdaTune provides 1.3-3.9\texttimes{} speedup in optimization time over the baseline to reach the same optimization quality for a range of models across different hardware architectures.},
+booktitle = {Proceedings of the 34th International Conference on Neural Information Processing Systems},
+articleno = {1241},
+numpages = {13},
+location = {Vancouver, BC, Canada},
+series = {NIPS '20}
+}
+
+@article{Micro-kernels,
+author = {Alaejos, Guillermo and Castell\'{o}, Adri\'{a}n and Mart\'{\i}nez, H\'{e}ctor and Alonso-Jord\'{a}, Pedro and Igual, Francisco D. and Quintana-Ort\'{\i}, Enrique S.},
+title = {Micro-kernels for portable and efficient matrix multiplication in deep learning},
+year = {2022},
+issue_date = {May 2023},
+publisher = {Kluwer Academic Publishers},
+address = {USA},
+volume = {79},
+number = {7},
+issn = {0920-8542},
+url = {https://doi.org/10.1007/s11227-022-05003-3},
+doi = {10.1007/s11227-022-05003-3},
+abstract = {We provide a practical demonstration that it is possible to systematically generate a variety of high-performance micro-kernels for the general matrix multiplication (gemm) via generic templates which can be easily customized to different processor architectures and micro-kernel dimensions. These generic templates employ vector intrinsics to exploit the SIMD (single instruction, multiple data) units in current general-purpose processors and, for the particular type of gemm problems encountered in deep learning, deliver a floating-point throughput rate on par with or even higher than that obtained with conventional, carefully tuned implementations of gemm in current linear algebra libraries (e.g., BLIS, AMD AOCL, ARMPL). Our work exposes the structure of the template-based micro-kernels for ARM Neon (128-bit SIMD), ARM SVE (variable-length SIMD) and Intel AVX512 (512-bit SIMD), showing considerable performance for an NVIDIA Carmel processor (ARM Neon), a Fujitsu A64FX processor (ARM SVE) and on an AMD EPYC 7282 processor (256-bit SIMD).},
+journal = {J. Supercomput.},
+month = {dec},
+pages = {8124–8147},
+numpages = {24},
+keywords = {SIMD units, Vector intrinsics, High performance, Linear algebra libraries, Matrix multiplication}
+}
+
+@software{jax2018github,
+  author = {James Bradbury and Roy Frostig and Peter Hawkins and Matthew James Johnson and Chris Leary and Dougal Maclaurin and George Necula and Adam Paszke and Jake Vander{P}las and Skye Wanderman-{M}ilne and Qiao Zhang},
+  title = {{JAX}: composable transformations of {P}ython+{N}um{P}y programs},
+  url = {http://github.com/google/jax},
+  version = {0.3.13},
+  year = {2018},
+}
+
+@misc{openxla,
+  title={Open Source ML Compiler},
+  howpublished={\url{https://github.com/openxla/}},
+  note = {Accessed: 2025-03-21}
+}
+
+@article{nest_compiler,
+author = {Park, Jeman and Yu, Misun and Kwon, Jinse and Park, Junmo and Lee, Jemin and Kwon, Yongin},
+title = {NEST-C: A deep learning compiler framework for heterogeneous computing systems with artificial intelligence accelerators},
+journal = {ETRI Journal},
+volume = {46},
+number = {5},
+pages = {851-864},
+keywords = {AI accelerator, deep learning compiler, heterogeneous computing, model quantization, multi-level IR},
+doi = {https://doi.org/10.4218/etrij.2024-0139},
+url = {https://onlinelibrary.wiley.com/doi/abs/10.4218/etrij.2024-0139},
+eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.4218/etrij.2024-0139},
+abstract = {Abstract Deep learning (DL) has significantly advanced artificial intelligence (AI); however, frameworks such as PyTorch, ONNX, and TensorFlow are optimized for general-purpose GPUs, leading to inefficiencies on specialized accelerators such as neural processing units (NPUs) and processing-in-memory (PIM) devices. These accelerators are designed to optimize both throughput and energy efficiency but they require more tailored optimizations. To address these limitations, we propose the NEST compiler (NEST-C), a novel DL framework that improves the deployment and performance of models across various AI accelerators. NEST-C leverages profiling-based quantization, dynamic graph partitioning, and multi-level intermediate representation (IR) integration for efficient execution on diverse hardware platforms. Our results show that NEST-C significantly enhances computational efficiency and adaptability across various AI accelerators, achieving higher throughput, lower latency, improved resource utilization, and greater model portability. These benefits contribute to more efficient DL model deployment in modern AI applications.},
+year = {2024}
+}
+
+
+
+
+@software{ones_ai_VTA_LIB,
+    title={VTA Library customized by ONES AI},
+    note = {Accessed: 2025-03-21},
+    howpublished={\url{https://gitlab.com/ones-ai/vta_lib}},
+    year={2024},
+}
+
+@software{tvm_vta_configuration,
+    title={VTA Configuration},
+    note = {Accessed: 2025-03-21},
+    howpublished={\url{https://tvm.apache.org/docs/topic/vta/dev/config.html}},
+    version = {1.0},
+    year={2022},
+}
+
+@misc{zcu_102_ZCU102_evaluation,
+  author={AMD},
+  title={ZCU102 Evaluation Board User Guide},
+  howpublished={\url{https://docs.amd.com/v/u/en-US/ug1182-zcu102-eval-bd}},
+  note = {Accessed: 2025-03-21}
+}
+
+
+
+@misc{glow_kingma2018glowgenerativeflowinvertible,
+      title={Glow: Generative Flow with Invertible 1x1 Convolutions}, 
+      author={Diederik P. Kingma and Prafulla Dhariwal},
+      year={2018},
+      eprint={1807.03039},
+      archivePrefix={arXiv},
+      primaryClass={stat.ML},
+      url={https://arxiv.org/abs/1807.03039}, 
+}
+
+
+@INPROCEEDINGS{resnet18,
+  author={He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
+  booktitle={2016 IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}, 
+  title={Deep Residual Learning for Image Recognition}, 
+  year={2016},
+  volume={},
+  number={},
+  pages={770-778},
+  keywords={Training;Degradation;Complexity theory;Image recognition;Neural networks;Visualization;Image segmentation},
+  doi={10.1109/CVPR.2016.90}}
+
+
+@article{li2020deep,
+  title={The deep learning compiler: A comprehensive survey},
+  author={Li, Mingzhen and Liu, Yi and Liu, Xiaoyan and Sun, Qingxiao and You, Xin and Yang, Hailong and Luan, Zhongzhi and Gan, Lin and Yang, Guangwen and Qian, Depei},
+  journal={IEEE Transactions on Parallel and Distributed Systems},
+  volume={32},
+  number={3},
+  pages={708--727},
+  year={2020},
+  publisher={IEEE}
+}
+
+
+@inproceedings{zheng2020ansor,
+  title={Ansor: Generating high-performance tensor programs for deep learning},
+  author={Zheng, Lianmin and Jia, Chengfan and Sun, Minmin and Wu, Zhao and Yu, Cody Hao and Haj-Ali, Ameer and Wang, Yida and Yang, Jun and Zhuo, Danyang and Sen, Koushik and others},
+  booktitle={14th $\{$USENIX$\}$ Symposium on Operating Systems Design and Implementation ($\{$OSDI$\}$ 20)},
+  pages={863--879},
+  year={2020}
+}
+
+@inproceedings{one_shot_tuner,
+author = {Ryu, Jaehun and Park, Eunhyeok and Sung, Hyojin},
+title = {One-shot tuner for deep learning compilers},
+year = {2022},
+isbn = {9781450391832},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3497776.3517774},
+doi = {10.1145/3497776.3517774},
+abstract = {Auto-tuning DL compilers are gaining ground as an optimizing back-end for DL frameworks. While existing work can generate deep learning models that exceed the performance of hand-tuned libraries, they still suffer from prohibitively long auto-tuning time due to repeated hardware measurements in large search spaces. In this paper, we take a neural-predictor inspired approach to reduce the auto-tuning overhead and show that a performance predictor model trained prior to compilation can produce optimized tensor operation codes without repeated search and hardware measurements. To generate a sample-efficient training dataset, we extend input representation to include task-specific information and to guide data sampling methods to focus on learning high-performing codes. We evaluated the resulting predictor model, One-Shot Tuner, against AutoTVM and other prior work, and the results show that One-Shot Tuner speeds up compilation by 2.81x to 67.7x compared to prior work while providing comparable or improved inference time for CNN and Transformer models.},
+booktitle = {Proceedings of the 31st ACM SIGPLAN International Conference on Compiler Construction},
+pages = {89–103},
+numpages = {15},
+keywords = {performance models, optimizing compilers, deep neural networks, autotuning},
+location = {Seoul, South Korea},
+series = {CC 2022}
+}
+
+@inproceedings{xgboost,
+author = {Chen, Tianqi and Guestrin, Carlos},
+title = {XGBoost: A Scalable Tree Boosting System},
+year = {2016},
+isbn = {9781450342322},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/2939672.2939785},
+doi = {10.1145/2939672.2939785},
+abstract = {Tree boosting is a highly effective and widely used machine learning method. In this paper, we describe a scalable end-to-end tree boosting system called XGBoost, which is used widely by data scientists to achieve state-of-the-art results on many machine learning challenges. We propose a novel sparsity-aware algorithm for sparse data and weighted quantile sketch for approximate tree learning. More importantly, we provide insights on cache access patterns, data compression and sharding to build a scalable tree boosting system. By combining these insights, XGBoost scales beyond billions of examples using far fewer resources than existing systems.},
+booktitle = {Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining},
+pages = {785–794},
+numpages = {10},
+keywords = {large-scale machine learning},
+location = {San Francisco, California, USA},
+series = {KDD '16}
+}
+
+@article{fursin2011milepost,
+  title={Milepost GCC: Machine learning enabled self-tuning compiler},
+  author={Fursin, Grigori and et al.},
+  journal={International Journal of Parallel Programming},
+  year={2011}
+}
+
+@inproceedings{gschwandtner2014multi,
+author="Gschwandtner, Philipp
+and Durillo, Juan J.
+and Fahringer, Thomas",
+editor="Silva, Fernando
+and Dutra, In{\^e}s
+and Santos Costa, V{\'i}tor",
+title="Multi-Objective Auto-Tuning with Insieme: Optimization and Trade-Off Analysis for Time, Energy and Resource Usage",
+booktitle="Euro-Par 2014 Parallel Processing",
+year="2014",
+publisher="Springer International Publishing",
+address="Cham",
+pages="87--98",
+abstract="The increasing complexity of modern multi- and many-core hardware design makes performance tuning of parallel applications a difficult task. In the past, auto-tuners have been successfully applied to minimize execution time. However, besides execution time, additional optimization goals have recently arisen, such as energy consumption or computing costs. Therefore, more sophisticated methods capable of exploiting and identifying the trade-offs among these goals are required. In this work we present and discuss results of applying a multi-objective search-based auto-tuner to optimize for three conflicting criteria: execution time, energy consumption, and resource usage. We examine a method, called RS-GDE3, to tune HPC codes using the Insieme parallelizing and optimizing compiler. Our results demonstrate that RS-GDE3 offers solutions of superior quality than those provided by a hierarchical and a random search at a fraction of the required time (5{\%}) or energy (8{\%}). A comparison to a state-of-the-art multi-objective optimizer (NSGA-II) shows that RS-GDE3 computes solutions of higher quality. Finally, based on the trade-off solutions found by RS-GDE3, we provide a detailed analysis and several hints on how to improve the design of multi-objective auto-tuners and code optimization.",
+isbn="978-3-319-09873-9"
+}
+
+@INPROCEEDINGS{xiao2024eatuner,
+  author={Xiao, Guojian and Qin, Siyuan and Li, Kuan and Chen, Juan and Yin, Jianping},
+  booktitle={2024 27th International Conference on Computer Supported Cooperative Work in Design (CSCWD)}, 
+  title={EAtuner: Comparative Study of Evolutionary Algorithms for Compiler Auto-tuning}, 
+  year={2024},
+  volume={},
+  number={},
+  pages={419-426},
+  keywords={Codes;Program processors;Machine learning algorithms;Supervised learning;Evolutionary computation;Manuals;Benchmark testing;iterative compilation;auto-tuning;evolutionary algorithms;differential evolution},
+  doi={10.1109/CSCWD61410.2024.10580120}}
+
+
+
+@inproceedings{jordan2012multi,
+  title={Multi-objective design space exploration},
+  author={Jordan, Hal and et al.},
+  booktitle={Design, Automation \& Test in Europe Conference \& Exhibition (DATE)},
+  year={2012}
+}
+
+@article{zhu2023comptuner,
+author = {Zhu, Mingxuan and Hao, Dan and Chen, Junjie},
+title = {Compiler Autotuning through Multiple-phase Learning},
+year = {2024},
+issue_date = {May 2024},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {33},
+number = {4},
+issn = {1049-331X},
+url = {https://doi.org/10.1145/3640330},
+doi = {10.1145/3640330},
+abstract = {Widely used compilers like GCC and LLVM usually have hundreds of optimizations controlled by optimization flags, which are enabled or disabled during compilation to improve the runtime performance (e.g., small execution time) of the compiler program. Due to the large number of optimization flags and their combination, it is difficult for compiler users to manually tune compiler optimization flags. In the literature, a number of autotuning techniques have been proposed, which tune optimization flags for a compiled program by comparing its actual runtime performance with different optimization flag combinations. Due to the huge search space and heavy actual runtime cost, these techniques suffer from the widely recognized efficiency problem. To reduce the heavy runtime cost, in this article we propose a lightweight learning approach that uses a small number of actual runtime performance data to predict the runtime performance of a compiled program with various optimization flag combinations. Furthermore, to reduce the search space, we design a novel particle swarm algorithm that tunes compiler optimization flags with the prediction model. To evaluate the performance of the proposed approach, CompTuner, we conduct an extensive experimental study on two popular C compilers, GCC and LLVM, with two widely used benchmarks, cBench and PolyBench. The experimental results show that CompTuner&nbsp;significantly outperforms the six compared techniques, including the state-of-the-art technique BOCA.},
+journal = {ACM Trans. Softw. Eng. Methodol.},
+month = apr,
+articleno = {100},
+numpages = {38},
+keywords = {Compiler, compiler autotuning, multiple phase learning, particle swarm optimization}
+}
+
+
+@inproceedings{zhu2024comptuner,
+  title={CompTuner++: Fast Compiler Tuning via Lightweight ML Models},
+  author={Zhu, Xiaoyang and Hao, Junjie},
+  booktitle={International Conference on Programming Language Design and Implementation (PLDI)},
+  year={2024}
+}
+
+@INPROCEEDINGS{chen2021boca,
+  author={Chen, Junjie and Xu, Ningxin and Chen, Peiqi and Zhang, Hongyu},
+  booktitle={2021 IEEE/ACM 43rd International Conference on Software Engineering (ICSE)}, 
+  title={Efficient Compiler Autotuning via Bayesian Optimization}, 
+  year={2021},
+  volume={},
+  number={},
+  pages={1198-1209},
+  keywords={Runtime;Program processors;Optimization methods;Benchmark testing;Search problems;Bayes methods;Optimization;Compiler Autotuning;Bayesian Optimization;Compiler Optimization;Configuration},
+  doi={10.1109/ICSE43902.2021.00110}}
+
+
+@INPROCEEDINGS{zhu2023cfsca,
+  author={Zhu, Mingxuan and Hao, Dan},
+  booktitle={2023 38th IEEE/ACM International Conference on Automated Software Engineering (ASE)}, 
+  title={Compiler Auto-Tuning via Critical Flag Selection}, 
+  year={2023},
+  volume={},
+  number={},
+  pages={1000-1011},
+  keywords={Program processors;Runtime;Statistical analysis;Documentation;Benchmark testing;Search problems;Optimization;Compiler;Compiler Auto-tuning;Critical Flag Selection;Search},
+  doi={10.1109/ASE56229.2023.00209}}
+
+
+@inproceedings{srtuner2022,
+  title={SRTuner: Effective Compiler Optimization Customization by Exposing Synergistic Relations},
+  author={Author, Anonymous},
+  booktitle={Proceedings of the 2022 International Symposium on Code Optimization},
+  year={2022}
+}
+
+@misc{wang2022supersonic,
+      title={A Reinforcement Learning Environment for Automatic Code Optimization in the MLIR Compiler}, 
+      author={Nazim Bendib and Iheb Nassim Aouadj and Riyadh Baghdadi},
+      year={2024},
+      eprint={2409.11068},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2409.11068}, 
+}
+
+@inproceedings{cereda2020cf, series={LCTES ’20},
+   title={A Collaborative Filtering Approach for the Automatic Tuning of Compiler Optimisations},
+   url={http://dx.doi.org/10.1145/3372799.3394361},
+   DOI={10.1145/3372799.3394361},
+   booktitle={The 21st ACM SIGPLAN/SIGBED Conference on Languages, Compilers, and Tools for Embedded Systems},
+   publisher={ACM},
+   author={Cereda, Stefano and Palermo, Gianluca and Cremonesi, Paolo and Doni, Stefano},
+   year={2020},
+   month=jun, pages={15–25},
+   collection={LCTES ’20} }
+
+
+@inproceedings{collins2013masif,
+  title={MaSiF: Efficient Multi-objective Compiler Tuning via Surrogate Models},
+  author={Collins, Jacob and et al.},
+  booktitle={International Conference on High Performance Computing},
+  year={2013}
+}
+
+
+@inproceedings{qu2024autosparse,
+  title={AutoSparse: A Source-to-Source Format and Schedule Auto-Tuning Framework for Sparse Tensor Program},
+  author={Qu, Xiaoyan and Gong, Lei and Lou, Wenqi and Cheng, Qianyu and Chen, Xianglan and Wang, Chao and Zhou, Xuehai},
+  booktitle={Proceedings of the IEEE International Conference on Computer Design (ICCD)},
+  pages={504--512},
+  year={2024},
+  doi={10.1109/ICCD63220.2024.00083}
+}
+
+@misc{yan2024scorch,
+      title={Scorch: A Library for Sparse Deep Learning}, 
+      author={Bobby Yan and Alexander J. Root and Trevor Gale and David Broman and Fredrik Kjolstad},
+      year={2024},
+      eprint={2405.16883},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2405.16883}, 
+}
+
+@article{mu2024ftuner,
+  title={FTuner: A Fast Dynamic Shape Tensors Program Auto-Tuner for Deep Learning Compilers},
+  author={Mu, Pengyu and Wei, Linquan and Liu, Yi and Wang, Rui},
+  journal={arXiv preprint arXiv:2407.21418},
+  year={2024},
+  url={https://arxiv.org/abs/2407.21418}
+}
+
+@article{mu2023haotuner,
+  title={HAOTuner: A Hardware Adaptive Operator Auto-Tuner for Dynamic Shape Tensor Compilers},
+  author={Mu, Pengyu and Liu, Yi and Wang, Rui and Sun, Zhonghao and Yang, Hailong and Luan, Zhongzhi and Qian, Depei},
+  journal={IEEE Transactions on Computers},
+  volume={73},
+  number={1},
+  pages={1--13},
+  year={2023},
+  doi={10.1109/TC.2023.3288758}
+}
+
+@inproceedings{li2023familyseer,
+  title={Exploiting Subgraph Similarities for Efficient Auto-tuning of Tensor Programs},
+  author={Li, Mingzhen and Zhang, Shanjun and Yu, Fengwei and Gong, Ruihao and Liu, Yi and Luan, Zhongzhi and Qian, Depei},
+  booktitle={Proceedings of the International Conference on Parallel Processing (ICPP)},
+  year={2023},
+  doi={10.1145/3605573.3605596}
+}
+
+@article{qiao2024pruner,
+  title={Pruner: An Efficient Cross-Platform Tensor Compiler with Dual Awareness},
+  author={Qiao, Liang and Shi, Jun and Hao, Xiaoyu and Fang, Xi and Zhao, Minfan and Zhu, Ziqi and Chen, Junshi and An, Hong and Li, Bing and Yuan, Honghui and Wang, Xinyang},
+  journal={arXiv preprint arXiv:2402.02361},
+  year={2024},
+  url={https://arxiv.org/abs/2402.02361}
+}
+
+@article{Dias2024SparseAuto,
+author = {Dias, Adhitha and Anderson, Logan and Sundararajah, Kirshanthan and Pelenitsyn, Artem and Kulkarni, Milind},
+title = {SparseAuto: An Auto-scheduler for Sparse Tensor Computations using Recursive Loop Nest Restructuring},
+year = {2024},
+issue_date = {October 2024},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {8},
+number = {OOPSLA2},
+url = {https://doi.org/10.1145/3689730},
+doi = {10.1145/3689730},
+journal = {Proc. ACM Program. Lang.},
+month = oct,
+articleno = {290},
+numpages = {30},
+keywords = {Asymptotic Analysis, Automatic Scheduling, Fusion, Loop Transformations, Sparse Tensor Algebra}
+}
+
+
+@article{grubisic2023looptune,
+  title={LoopTune: Optimizing Tensor Computations with Reinforcement Learning},
+  author={Grubisic, Dejan and Wasti, Bram and Cummins, Chris and Mellor-Crummey, John and Zlateski, Aleksandar},
+  journal={arXiv preprint arXiv:2309.01825},
+  year={2023},
+  url={https://arxiv.org/abs/2309.01825}
+}
+
+@misc{wang2023adegbrt,
+  title={Optimizing Tensor Programs of DNNs via Adaptive Differential Evolution with Hardware Measurement Estimation},
+  author={Wang, Yuyang and Lin, Xuxin and Zhou, Mingwei and Liang, Yao},
+  howpublished={SSRN preprint},
+  year={2023},
+  doi={10.2139/ssrn.4528511}
+}
+
+@inproceedings{ryu2022oneshot,
+  title={One-shot tuner for deep learning compilers},
+  author={Ryu, Jaehun and Park, Eunhyeok and Sung, Hyojin},
+  booktitle={Proceedings of the International Conference on Compiler Construction (CC)},
+  year={2022},
+  doi={10.1145/3497776.3517774},
+  url={https://dl.acm.org/doi/10.1145/3497776.3517774}
+}
+
+@inproceedings{xu2023alt,
+  title={ALT: Breaking the Wall between Data Layout and Loop Optimizations for Deep Learning Compilation},
+  author={Xu, Zhiying and Xu, Jiafan and Peng, H. and Wang, Wei and Wang, Xiaoliang and Wan, Hao and Dai, Haipeng and Xu, Yi-Xian and Cheng, Hao and Chen, Guihai},
+  booktitle={Proceedings of the European Conference on Computer Systems (EuroSys)},
+  year={2023},
+  doi={10.1145/3552326.3587440}
+}
+
+@article{xu2022alt,
+  title={ALT: Boosting Deep Learning Performance by Breaking the Wall between Graph and Operator Level Optimizations},
+  author={Xu, Zhiying and Xu, Jiafan and Peng, H. and Wang, Wei and Wang, Xiaoliang and Wan, Hao and Dai, Haipeng and Xu, Yi-Xian and Cheng, Hao and Wang, Kun Fei and Chen, Guihai},
+  journal={arXiv preprint arXiv:2210.12415},
+  year={2022},
+  url={https://arxiv.org/abs/2210.12415}
+}
+
+@inproceedings{kwon2023acltuner,
+  title={ACLTuner: A Profiling-Driven Fast Tuning to Optimized Deep Learning Inference},
+  author={Kwon, Yongin and Cha, Joo Hyoung and Lee, Jubin and Yu, Misun and Park, Jeman and Lee, Jemin},
+  booktitle={Proceedings of the Machine Learning for Systems Workshop at NeurIPS, New Orleans, MI, USA},
+  pages={1--12},
+  year={2023}
+}
+
+@inproceedings{Zhao2024Felix,
+  title={Felix: Optimizing Tensor Programs with Gradient Descent},
+  author={Yifan Zhao and Hashim Sharif and Vikram S. Adve and Sasa Misailovic},
+  booktitle={Proceedings of the 29th International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS '24)},
+  year={2024},
+  note={to appear},
+  url={https://misailo.cs.illinois.edu/papers/felix-asplos24.pdf}
+}
+@inproceedings{Zhao2023Moses,
+  title={{Moses}: Exploiting Cross-Device Transferable Features for On-Device Tensor Program Optimization},
+  author={Zhihe Zhao and Xian Shuai and Neiwen Ling and Nan Guan and Zhenyu Yan and Guoliang Xing},
+  booktitle={Proceedings of the 24th International Workshop on Mobile Computing Systems and Applications (HotMobile '23)},
+  year={2023},
+  pages={3--9},
+  doi={10.1145/3572864.3580330}
+}
+
+@article{Ma2023IntelliGen,
+  title={IntelliGen: A Tensor Compiler for Memory-Intensive Operators via Unified Graph-Level and Instruction-Level Optimizations},
+  author={Zixuan Ma and Haojie Wang and Jia Xing and Liyan Zheng and Chen Zhang and Huanqi Cao and Kezhao Huang and Shizhi Tang and Penghan Wang and Jidong Zhai},
+  journal={arXiv preprint arXiv:2307.04995},
+  year={2023},
+  url={https://arxiv.org/abs/2307.04995},
+  doi={10.48550/arXiv.2307.04995}
+}
+
+
+@inproceedings{pruner_ansor_Draft_then_Verify,
+author = {Qiao, Liang and Shi, Jun and Hao, Xiaoyu and Fang, Xi and Zhang, Sen and Zhao, Minfan and Zhu, Ziqi and Chen, Junshi and An, Hong and Tang, Xulong and Li, Bing and Yuan, Honghui and Wang, Xinyang},
+title = {Pruner: A Draft-then-Verify Exploration Mechanism to Accelerate Tensor Program Tuning},
+year = {2025},
+isbn = {9798400710797},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3676641.3716269},
+doi = {10.1145/3676641.3716269},
+abstract = {Tensor program tuning is essential for the efficient deployment of deep neural networks. Search-based approaches have demonstrated scalability and effectiveness in automatically finding high-performance programs for specific hardware. However, the search process is often inefficient, taking hours or even days to discover optimal programs due to the exploration mechanisms guided by an accurate but slow-learned cost model. Meanwhile, the learned cost model trained on one platform cannot seamlessly adapt online to another, which we call cross-platform online unawareness. In this work, we propose Pruner and MoA-Pruner. Pruner is a ''Draft-then-Verify'' exploration mechanism that accelerates the schedule search process. Instead of applying the complex learned cost model to all explored candidates, Pruner drafts small-scale potential candidates by introducing a naive Symbol-based Analyzer (draft model), then identifies the best candidates by the learned cost model. MoA-Pruner introduces a Momentum online Adaptation strategy to address the cross-platform online unawareness.We incorporate Pruner into the TVM and conduct extensive experiments on three GPU-based platforms. Results show considerable speedup in schedule search time. In online tuning scenarios, Pruner and MoA-Pruner achieve an average speedup of 2.6 \texttimes{} and 4.82 \texttimes{} compared to Ansor. In offline tuning scenarios, Pruner achieves an average speedup of 4.75 \texttimes{} and 4.05\texttimes{} compared to TenSet and TLP, respectively. Furthermore, Pruner achieves an average speedup of 4.08 \texttimes{} compared to MetaSchedule on TensorCore.},
+booktitle = {Proceedings of the 30th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 2},
+pages = {949–965},
+numpages = {17},
+keywords = {code generation, compiler optimization, tensor program tuning},
+location = {Rotterdam, Netherlands},
+series = {ASPLOS '25}
+}
+
+@inproceedings{Huang2024Fasor,
+author = {Huang, Hanxian and Chen, Xin and Zhao, Jishen},
+title = {Fasor: A Fast Tensor Program Optimization Framework for Efficient DNN Deployment},
+year = {2024},
+isbn = {9798400706103},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3650200.3656631},
+doi = {10.1145/3650200.3656631},
+abstract = {With the growing importance of deploying deep neural networks (DNNs), there are increasing demands to improve both the efficiency and quality of tensor program optimization&nbsp;(TPO). TPO involves searching for possible program transformations for a given tensor program on target hardware to optimize its execution. TPO is challenging and expensive due to the exponential combinations of transformations and time-consuming on-device measurement of transformations. While prior research has primarily focused on the quality of TPO, i.e., generating high-performance tensor programs, there has been less emphasis on the efficiency of TPO, i.e., optimizing tensor programs with low optimization time overhead. In this paper, we address the primary inefficiencies in current TPO approaches, especially the extensive time required for on-device measurement and the inefficiency in the search process, and aim to reduce the optimization time for DNNs. To this end, we propose a machine learning-based, end-to-end TPO framework named Fasor. Fasor includes three key design components: 1):&nbsp;a transferable cost model with high transferring efficiency to reduce the on-device measurement time significantly, 2):&nbsp;a search space shrinking module to prune program transformations with low optimization potential, and 3):&nbsp;a two-stage fast exploration module to enhance searching efficiency substantially. Experimental results show that Fasor achieves the best of both worlds in TPO quality and efficiency compared to state-of-the-art TPO frameworks for CPUs and GPUs, contributing to efficient and scalable DNN deployment.},
+booktitle = {Proceedings of the 38th ACM International Conference on Supercomputing},
+pages = {498–510},
+numpages = {13},
+keywords = {TVM, auto-tuning, compute schedules, deep neural networks, performance models, tensor compilers, tensor program optimization},
+location = {Kyoto, Japan},
+series = {ICS '24}
+}
+
+@inproceedings{georganas2019brgemm,
+  title={High-performance low-precision matrix multiplication on x86 AVX-512},
+  author={Georganas, Evangelos and Heinecke, Alexander and Smelyanskiy, Mikhail and Pabst, Hans},
+  booktitle={Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis (SC)},
+  year={2019},
+  pages={1--13},
+  publisher={IEEE},
+  doi={10.1145/3295500.3356206}
+}
+
+@inproceedings{georganas2020brgemm,
+  title={Optimized batch-reduce GEMM for deep learning workloads on modern CPUs},
+  author={Georganas, Evangelos and Pabst, Hans and Hager, Georg and Heinecke, Alexander},
+  booktitle={Proceedings of the International Conference on High Performance Computing, Networking, Storage and Analysis (SC)},
+  year={2020},
+  pages={1--14},
+  publisher={IEEE},
+  doi={10.1109/SC41405.2020.00027}
+}
+
+@article{georganas2023tpp,
+  title={Harnessing Deep Learning and HPC Kernels via High-Level Loop and Tensor Abstractions on CPU Architectures},
+  author={Georganas, Evangelos and Markidis, Simone and Heinecke, Alexander},
+  journal={arXiv preprint arXiv:2305.19300},
+  year={2023},
+  url={https://arxiv.org/abs/2305.19300}
+}
+
+@inproceedings{sridhar2023small,
+  title={SMaLL: Structured Matrix Learning Library for High-Performance Deep Learning Kernels},
+  author={Sridhar, Deepak and Li, Hengrui and Ding, Ning and Sadayappan, P.},
+  booktitle={Proceedings of the 32nd International Conference on Parallel Architectures and Compilation Techniques (PACT)},
+  year={2023},
+  pages={33--46},
+  publisher={IEEE},
+  doi={10.1109/PACT57375.2023.00010}
+}
+
+@inproceedings{tavarageri2020hybrid,
+  title={Hybrid compilation for deep learning kernels with micro-kernel reuse and polyhedral optimization},
+  author={Tavarageri, Anagha and Baskaran, Muthu},
+  booktitle={Proceedings of the 2020 International Symposium on Code Generation and Optimization (CGO)},
+  year={2020},
+  pages={172--183},
+  publisher={IEEE},
+  doi={10.1109/CGO45797.2020.9045020}
+}
+
+@misc{tensorflow2015,
+  title={TensorFlow: Large-Scale Machine Learning on Heterogeneous Systems},
+  author={Mart\'{i}n Abadi and Ashish Agarwal and Paul Barham and Eugene Brevdo and Zhifeng Chen and Craig Citro and Greg S. Corrado and Andy Davis and Jeffrey Dean and Matthieu Devin and Sanjay Ghemawat and Ian Goodfellow and Andrew Harp and Geoffrey Irving and Michael Isard and Yangqing Jia and Rafal Jozefowicz and Lukasz Kaiser and Manjunath Kudlur and Josh Levenberg and Dandelion Man\'{e} and Rajat Monga and Sherry Moore and Derek Murray and Chris Olah and Mike Schuster and Jonathon Shlens and Benoit Steiner and Ilya Sutskever and Kunal Talwar and Paul Tucker and Vincent Vanhoucke and Vijay Vasudevan and Fernanda Vi\'{e}gas and Oriol Vinyals and Pete Warden and Martin Wattenberg and Martin Wicke and Yuan Yu and Xiaoqiang Zheng},
+  year={2015},
+  howpublished={\url{https://www.tensorflow.org/}},
+  note={Software available from tensorflow.org}
+}
+
+
+@inproceedings{paszke2019pytorch,
+  title={PyTorch: An Imperative Style, High-Performance Deep Learning Library},
+  author={Paszke, Adam and Gross, Sam and Massa, Francesco and Lerer, Adam and Bradbury, James and Chanan, Gregory and Killeen, Trevor and Lin, Zeming and Gimelshein, Natalia and Antiga, Luca and Desmaison, Alban and Kopf, Andreas and Yang, Edward and DeVito, Zachary and Raison, Martin and Tejani, Alykhan and Chilamkurthy, Sasank and Steiner, Benoit and Fang, Lu and Bai, Junjie and Chintala, Soumith},
+  booktitle={Advances in Neural Information Processing Systems (NeurIPS)},
+  year={2019},
+  pages={8024--8035},
+  publisher={Curran Associates, Inc.}
+}
+
+
+@inproceedings{chetlur2014cudnn,
+  title={cuDNN: Efficient Primitives for Deep Learning},
+  author={Chetlur, Sharan and Woolley, Cliff and Vandermersch, Philippe and Cohen, Jonathan and Tran, John and Catanzaro, Bryan and Shelhamer, Evan},
+  booktitle={Proceedings of the Deep Learning Systems Workshop (DeepSys) at NIPS},
+  year={2014},
+  note={URL: \url{https://developer.nvidia.com/cudnn}}
+}
+@manual{nvidia_cublas,
+  title={{NVIDIA cuBLAS Library}},
+  author={{NVIDIA Corporation}},
+  year={2023},
+  note={Version 12.2},
+  url={https://docs.nvidia.com/cuda/cublas/}
+}
+
+@misc{onednn,
+  title={Intel oneDNN},
+  howpublished={\url{https://github.com/oneapi-src/oneDNN}},
+year = {2023}
+}
+
+@misc{ncnn,
+  title={Tensent NCNN},
+  howpublished={\url{https://github.com/Tencent/ncnn}},
+year = {2023}
+}
+
+@misc{armnn_git, 
+  title={ArmNN},
+  howpublished={\url{https://review.mlplatform.org/admin/repos/ml/armnn}},
+   year = {2023}
+}
+
+
+@inproceedings{singh2019hetconv,
+  title={HetConv: Heterogeneous Kernel-Based Convolutions for Deep CNNs},
+  author={Singh, Pranav Kumar and Namboodiri, Vinay P. and Venkatesh, R. and Babu, R. Venkatesh},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year={2019},
+  pages={4835--4844},
+  doi={10.1109/CVPR.2019.00497},
+  url={https://openaccess.thecvf.com/content_CVPR_2019/html/Singh_HetConv_Heterogeneous_Kernel-Based_Convolutions_for_Deep_CNNs_CVPR_2019_paper.html}
+}
+
+
+@inproceedings{jeon2019hivemind,
+  title={Multi-Model Execution for Deep Learning Inference on GPUs},
+  author={Jeon, Minsik and Jeong, Jongsoo and Ananthanarayanan, Ganesh and Qian, Zhengping and Kandula, Srikanth and Gao, Jun},
+  booktitle={Proceedings of the 2nd Conference on Machine Learning and Systems (MLSys)},
+  year={2019},
+  pages={42--54},
+  url={https://proceedings.mlsys.org/paper/2019/file/0b5b1c8a0f8a5e8f60d2ffdf4c4e9b31-Paper.pdf}
+}
+
+
+@article{tavarageri2020polyscientist,
+  title={PolyScientist: Automatic Loop Transformations Combined with Microkernels for Optimization of Deep Learning Primitives},
+  author={Sanket Tavarageri and Alexander Heinecke and Sasikanth Avancha and Gagandeep Goyal and Ramakrishna Upadrasta and Bharat Kaul},
+  journal={arXiv preprint arXiv:2002.02145},
+  year={2020},
+  url={https://arxiv.org/abs/2002.02145}
+}
+
+@manual{tensorrt_doc,
+  title={{NVIDIA TensorRT: High Performance Deep Learning Inference}},
+  author={{NVIDIA Corporation}},
+  year={2023},
+  note={Version 8.6, \url{https://developer.nvidia.com/tensorrt}},
+}
+
+@manual{openvino_doc,
+  title={{OpenVINO Toolkit}},
+  author={{Intel Corporation}},
+  year={2023},
+  note={\url{https://docs.openvino.ai/latest/index.html}},
+}
+
+@misc{cuda_CUDA_Toolkit_nvidia,
+author={NVIDIA},
+  title={CUDA Toolkit},
+  howpublished={\url{https://developer.nvidia.com/cuda-toolkit/}},
+  note = {Accessed: 2024-09-22}
+}
+
+@ARTICLE{vta,
+  author={Moreau, Thierry and Chen, Tianqi and Vega, Luis and Roesch, Jared and Yan, Eddie and Zheng, Lianmin and Fromm, Josh and Jiang, Ziheng and Ceze, Luis and Guestrin, Carlos and Krishnamurthy, Arvind},
+  journal={IEEE Micro}, 
+  title={A Hardware–Software Blueprint for Flexible Deep Learning Specialization}, 
+  year={2019},
+  volume={39},
+  number={5},
+  pages={8-16},
+  keywords={Machine learning;Computer architecture;Runtime;Task analysis;Computational modeling;Deep learning},
+  doi={10.1109/MM.2019.2928962}}
+
+
+@inproceedings{kwon2013mantis,
+  title={Mantis: Automatic performance prediction for smartphone applications},
+  author={Kwon, Yongin and Lee, Sangmin and Yi, Hayoon and Kwon, Donghyun and Yang, Seungjun and Chun, Byung-Gon and Huang, Ling and Maniatis, Petros and Naik, Mayur and Paek, Yunheung},
+  booktitle={2013 USENIX Annual Technical Conference (USENIX ATC 13)},
+  pages={297--308},
+  year={2013}
+}
+
+
+%% ============================================================
+%% NEW REFERENCES FOR LLM-BASED TRITON KERNEL GENERATION PAPER
+%% ============================================================
+
+@inproceedings{ouyang2024kernelbench,
+  title={KernelBench: Can LLMs Write GPU Kernels?},
+  author={Ouyang, Anne and Zheng, Simon and Xin, Jiahui and Jiang, Charles and Luo, Abraham and Stojanov, Tianjun and Bai, Zicheng and Chen, Kunle and Darrell, Trevor and Gonzalez, Joseph E. and Stoica, Ion},
+  booktitle={NeurIPS 2024 Workshop on Foundation Model Interventions},
+  year={2024}
+}
+
+@article{tillet2019triton,
+  title={Triton: An Intermediate Language and Compiler for Tiled Neural Network Computations},
+  author={Tillet, Philippe and Kung, H. T. and Cox, David},
+  journal={Proceedings of the 3rd ACM SIGPLAN International Workshop on Machine Learning and Programming Languages},
+  year={2019},
+  pages={10--19}
+}
+
+@inproceedings{chen2021codex,
+  title={Evaluating Large Language Models Trained on Code},
+  author={Chen, Mark and Tworek, Jerry and Jun, Heewoo and Yuan, Qiming and Pinto, Henrique Ponde de Oliveira and Kaplan, Jared and Edwards, Harri and Burda, Yuri and Joseph, Nicholas and Brockman, Greg and others},
+  booktitle={arXiv preprint arXiv:2107.03374},
+  year={2021}
+}
+
+@article{openai2023gpt4,
+  title={GPT-4 Technical Report},
+  author={{OpenAI}},
+  journal={arXiv preprint arXiv:2303.08774},
+  year={2023}
+}
+
+@misc{openai2024o1,
+  title={Learning to Reason with LLMs},
+  author={{OpenAI}},
+  year={2024},
+  howpublished={\url{https://openai.com/index/learning-to-reason-with-llms/}}
+}
+
+@article{nijkamp2023codegen,
+  title={CodeGen: An Open Large Language Model for Code with Multi-Turn Program Synthesis},
+  author={Nijkamp, Erik and Pang, Bo and Hayashi, Hiroaki and Tu, Lifu and Wang, Huan and Zhou, Yingbo and Savarese, Silvio and Xiong, Caiming},
+  journal={ICLR},
+  year={2023}
+}
+
+@article{li2023starcoder,
+  title={StarCoder: may the source be with you!},
+  author={Li, Raymond and Allal, Loubna Ben and Zi, Yangtian and Muennighoff, Niklas and Kocetkov, Denis and Mou, Chenghao and Marone, Marc and Akiki, Christopher and Li, Jia and Chim, Jenny and others},
+  journal={Transactions on Machine Learning Research},
+  year={2023}
+}
+
+@article{austin2021mbpp,
+  title={Program Synthesis with Large Language Models},
+  author={Austin, Jacob and Odena, Augustus and Nye, Maxwell and Bosma, Maarten and Michalewski, Henryk and Dohan, David and Jiang, Ellen and Cai, Carrie and Terry, Michael and Le, Quoc and Sutton, Charles},
+  journal={arXiv preprint arXiv:2108.07732},
+  year={2021}
+}
+
+@article{jimenez2024swebench,
+  title={SWE-bench: Can Language Models Resolve Real-World GitHub Issues?},
+  author={Jimenez, Carlos E and Yang, John and Wettig, Alexander and Yao, Shunyu and Pei, Kexin and Press, Ofir and Narasimhan, Karthik},
+  journal={ICLR},
+  year={2024}
+}
+
+@article{guo2024deepseek,
+  title={DeepSeek-Coder: When the Large Language Model Meets Programming -- The Rise of Code Intelligence},
+  author={Guo, Daya and Zhu, Qihao and Yang, Dejian and Xie, Zhenda and Dong, Kai and Zhang, Wentao and Chen, Guanting and Bi, Xiao and Wu, Y. and Li, Y.K. and others},
+  journal={arXiv preprint arXiv:2401.14196},
+  year={2024}
+}
+
+@article{roziere2023codellama,
+  title={Code Llama: Open Foundation Models for Code},
+  author={Rozi{\`e}re, Baptiste and Gehring, Jonas and Gloeckle, Fabian and Sootla, Sten and Gat, Itai and Tan, Xiaoqing Ellen and Adi, Yossi and Liu, Jingyu and Sauvestre, Romain and Remez, Tal and others},
+  journal={arXiv preprint arXiv:2308.12950},
+  year={2023}
+}
+
+@article{hui2024qwencoder,
+  title={Qwen2.5-Coder Technical Report},
+  author={Hui, Binyuan and Yang, Jian and Cui, Zeyu and Yang, Jiaxi and Liu, Dayiheng and Zhang, Lei and Liu, Tianyu and Zhang, Jiajun and Yu, Bowen and Dang, Kai and others},
+  journal={arXiv preprint arXiv:2409.12186},
+  year={2024}
+}
+
+@article{dao2022flashattention,
+  title={FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness},
+  author={Dao, Tri and Fu, Daniel Y. and Ermon, Stefano and Rudra, Atri and R{\'e}, Christopher},
+  journal={NeurIPS},
+  year={2022}
+}
+
+@book{kirk2016programming,
+  title={Programming Massively Parallel Processors: A Hands-on Approach},
+  author={Kirk, David B. and Hwu, Wen-mei W.},
+  year={2016},
+  publisher={Morgan Kaufmann},
+  edition={3rd}
+}
+
+@inproceedings{ansel2024pytorch2,
+  title={PyTorch 2: Faster Machine Learning Through Dynamic Python Bytecode Transformation and Graph Compilation},
+  author={Ansel, Jason and Yang, Edward and He, Horace and Gimelshein, Natalia and Jain, Animesh and Voznesensky, Michael and Bao, Bin and Bell, Peter and Berard, David and Burber, Evgeni and others},
+  booktitle={ASPLOS},
+  year={2024}
+}
+
+@inproceedings{nickolls2008cuda,
+  title={Scalable Parallel Programming with CUDA},
+  author={Nickolls, John and Buck, Ian and Garland, Michael and Skadron, Kevin},
+  booktitle={ACM Queue},
+  volume={6},
+  number={2},
+  pages={40--53},
+  year={2008}
+}
+
+@inproceedings{ansel2014opentuner,
+  title={OpenTuner: An Extensible Framework for Program Autotuning},
+  author={Ansel, Jason and Kamil, Shoaib and Veeramachaneni, Kalyan and Ragan-Kelley, Jonathan and Bosboom, Jeffrey and O'Reilly, Una-May and Amarasinghe, Saman},
+  booktitle={PACT},
+  year={2014}
+}
+
+@article{wang2023selfconsistency,
+  title={Self-Consistency Improves Chain of Thought Reasoning in Language Models},
+  author={Wang, Xuezhi and Wei, Jason and Schuurmans, Dale and Le, Quoc and Chi, Ed and Narang, Sharan and Chowdhery, Aakanksha and Zhou, Denny},
+  journal={ICLR},
+  year={2023}
+}
+
+@inproceedings{li2025tritonbench,
+  title={TritonBench: Benchmarking Large Language Model Capabilities for Generating Triton Operators},
+  author={Li, Jianling and Li, Shangzhan and Gao, Zhenye and Shi, Qi and Li, Yuxuan and Wang, Zefan and Huang, Jiacheng and Wang, Haojie and Wang, Jianrong and Han, Xu and Liu, Zhiyuan and Sun, Maosong},
+  booktitle={Findings of the Association for Computational Linguistics (ACL)},
+  year={2025},
+  eprint={2502.14752},
+  archivePrefix={arXiv}
+}
+
+@article{yu2026automated_kernel_survey,
+  title={Towards Automated Kernel Generation in the Era of {LLM}s},
+  author={Yu, Yang and Zang, Peiyu and Tsai, Chi Hsu and Wu, Haiming and Shen, Yixin and Zhang, Jialing and Wang, Haoyu and Xiao, Zhiyou and Shi, Jingze and Luo, Yuyu and Zhang, Wentao and Men, Chunlei and Liu, Guang and Lin, Yonghua},
+  journal={arXiv preprint arXiv:2601.15727},
+  year={2026},
+  eprint={2601.15727},
+  archivePrefix={arXiv}
+}
+
+@article{woo2025tritonrl,
+  title={{TritonRL}: Training {LLM}s to Think and Code Triton Without Cheating},
+  author={Woo, Jiin and Zhu, Shaowei and Nie, Allen and Jia, Zhen and Wang, Yida and Park, Youngsuk},
+  journal={arXiv preprint arXiv:2510.17891},
+  year={2025},
+  eprint={2510.17891},
+  archivePrefix={arXiv}
+}
+
+@article{li2025autotriton,
+  title={{AutoTriton}: Automatic Triton Programming with Reinforcement Learning in {LLM}s},
+  author={Li, Shangzhan and Wang, Zefan and He, Ye and Li, Yuxuan and Shi, Qi and Li, Jianling and Hu, Yonggang and Che, Wanxiang and Han, Xu and Liu, Zhiyuan and Sun, Maosong},
+  journal={arXiv preprint arXiv:2507.05687},
+  year={2025},
+  eprint={2507.05687},
+  archivePrefix={arXiv}
+}
+
+@article{li2025tritonforge,
+  title={{TritonForge}: Profiling-Guided Framework for Automated Triton Kernel Optimization},
+  author={Li, Haonan and Man, Keyu and Kanuparthy, Partha and Chen, Hanning and Sun, Wei and Tallam, Sreen and Zhu, Chenguang and Zhu, Kevin and Qian, Zhiyun},
+  journal={arXiv preprint arXiv:2512.09196},
+  year={2025},
+  eprint={2512.09196},
+  archivePrefix={arXiv}
+}
+
+@article{chen2025cudallm,
+  title={{CUDA-LLM}: {LLM}s Can Write Efficient {CUDA} Kernels},
+  author={Chen, Wentao and Zhu, Jiace and Fan, Qi and Ma, Yehan and Zou, An},
+  journal={arXiv preprint arXiv:2506.09092},
+  year={2025},
+  eprint={2506.09092},
+  archivePrefix={arXiv}
+}
+
+@techreport{lange2025aicudaengineer,
+  title={The {AI} {CUDA} Engineer: Agentic {CUDA} Kernel Discovery, Optimization and Composition},
+  author={Lange, Robert Tjarko and Prasad, Aaditya and Sun, Qi and Faldor, Maxence and Tang, Yujin and Ha, David},
+  institution={Sakana AI},
+  year={2025},
+  url={https://pub.sakana.ai/ai-cuda-engineer/paper/}
+}
+
+@inproceedings{wu2025mirage,
+  title={Mirage: A Multi-Level Superoptimizer for Tensor Programs},
+  author={Wu, Mengdi and Cheng, Xinhao and Liu, Shengyu and Shi, Chunan and Ji, Jianan and Ao, Man Kit and Velliengiri, Praveen and Miao, Xupeng and Padon, Oded and Jia, Zhihao},
+  booktitle={19th USENIX Symposium on Operating Systems Design and Implementation (OSDI)},
+  year={2025},
+  eprint={2405.05751},
+  archivePrefix={arXiv}
+}
+
+@article{spector2024thunderkittens,
+  title={{ThunderKittens}: Simple, Fast, and Adorable {AI} Kernels},
+  author={Spector, Benjamin F. and Arora, Simran and Singhal, Aaryan and Fu, Daniel Y. and R\'{e}, Christopher},
+  journal={arXiv preprint arXiv:2410.20399},
+  year={2024},
+  eprint={2410.20399},
+  archivePrefix={arXiv}
+}
+
+@article{thakur2024verigen,
+  title={{VeriGen}: A Large Language Model for Verilog Code Generation},
+  author={Thakur, Shailja and Ahmad, Baleegh and Fan, Zhenxing and Pearce, Hammond and Tan, Benjamin and Karri, Ramesh and Dolan-Gavitt, Brendan and Garg, Siddharth},
+  journal={ACM Transactions on Design Automation of Electronic Systems},
+  volume={29},
+  number={3},
+  year={2024},
+  doi={10.1145/3643681}
+}
+
+@article{joel2024dsl_survey,
+  title={A Survey on {LLM}-based Code Generation for Low-Resource and Domain-Specific Programming Languages},
+  author={Joel, Sathvik and Wu, Jie JW and Fard, Fatemeh H.},
+  journal={arXiv preprint arXiv:2410.03981},
+  year={2024},
+  eprint={2410.03981},
+  archivePrefix={arXiv}
+}
+
+@article{dao2023flashattention2,
+  title={{FlashAttention-2}: Faster Attention with Better Parallelism and Work Partitioning},
+  author={Dao, Tri},
+  journal={arXiv preprint arXiv:2307.08691},
+  year={2023},
+  eprint={2307.08691},
+  archivePrefix={arXiv}
+}
+
+@article{jiang2023llmblender,
+  title={LLM-Blender: Ensembling Large Language Models with Pairwise Ranking and Generative Fusion},
+  author={Jiang, Dongfu and Ren, Xiang and Lin, Bill Yuchen},
+  journal={ACL},
+  year={2023}
+}
+%% ============================================================
+%% Related work additions for CGO 2027 submission
+%% (LLM-based GPU kernel generation / agentic optimization)
+%% Bibliographic data verified against arXiv; recent preprints
+%% may update IDs/venues before camera-ready.
+%% ============================================================
+
+@misc{wang2025geak,
+  title         = {GEAK: Introducing Triton Kernel AI Agent \& Evaluation Benchmarks},
+  author        = {Wang, Jianghui and Joshi, Vinay and Majumder, Saptarshi and Chao, Xu and Ding, Bin and Liu, Ziqiong and Brahma, Pratik Prabhanjan and Li, Dong and Liu, Zicheng and Barsoum, Emad},
+  year          = {2025},
+  eprint        = {2507.23194},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@misc{du2026adaexplore,
+  title         = {AdaExplore: Failure-Driven Adaptation and Diversity-Preserving Search for Efficient Kernel Generation},
+  author        = {Du, Weihua and Zhuo, Jingming and Dong, Yixin and He, Andre Wang and Sun, Weiwei and Zheng, Zeyu and Karunaratne, Manupa and Fox, Ivan and Dettmers, Tim and Chen, Tianqi and Yang, Yiming and Welleck, Sean},
+  year          = {2026},
+  eprint        = {2604.16625},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@misc{drtriton2025,
+  title         = {DRTriton: Large-Scale Synthetic Data Driven Reinforcement Learning for Triton Kernel Generation},
+  author        = {Guo, Siqi and Lin, Ming and Yang, Tianbao},
+  year          = {2026},
+  eprint        = {2603.21465},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@misc{cudal1_2026,
+  title         = {CUDA-L1: Improving CUDA Optimization via Contrastive Reinforcement Learning},
+  author        = {Li, Xiaoya and Sun, Xiaofei and Wang, Albert and Li, Jiwei and Shum, Chris},
+  year          = {2025},
+  eprint        = {2507.14111},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@misc{baronio2025kevin,
+  title         = {Kevin: Multi-Turn RL for Generating CUDA Kernels},
+  author        = {Baronio, Carlo and Marsella, Pietro and Pan, Ben and Guo, Simon and Alberti, Silas},
+  year          = {2025},
+  eprint        = {2507.11948},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@misc{tehrani2026gpt5kernel,
+  title         = {Fine-Tuning GPT-5 for GPU Kernel Generation},
+  author        = {Tehrani, Ali and Emara, Yahya and Wissam, Essam and Paluch, Wojciech and Atallah, Waleed and Dudziak, {\L}ukasz and Abdelfattah, Mohamed S.},
+  year          = {2026},
+  eprint        = {2602.11000},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@misc{cudaforge2025,
+  title         = {CudaForge: An Agent Framework with Hardware Feedback for CUDA Kernel Optimization},
+  author        = {Zhang, Zijian and Wang, Rong and Li, Shiyang and Luo, Yuebo and Hong, Mingyi and Ding, Caiwen},
+  year          = {2025},
+  eprint        = {2511.01884},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@misc{liao2026kernelevolve,
+  title         = {KernelEvolve: Scaling Agentic Kernel Coding for Heterogeneous AI Accelerators at Meta},
+  author        = {Liao, Gang and Wu, Carole-Jean and Liu, Gaoxiang and others},
+  year          = {2026},
+  eprint        = {2512.23236},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.DC}
+}
+
+@misc{accelopt2025,
+  title         = {AccelOpt: A Self-Improving LLM Agentic System for AI Accelerator Kernel Optimization},
+  author        = {Zhang, Genghan and Zhu, Shaowei and Wei, Anjiang and Song, Zhenyu and Nie, Allen and Jia, Zhen and Vijaykumar, Nandita and Wang, Yida and Olukotun, Kunle},
+  year          = {2025},
+  eprint        = {2511.15915},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@misc{stark2026,
+  title         = {STARK: Strategic Team of Agents for Refining Kernels},
+  author        = {Dong, Juncheng and Yang, Yang and Liu, Tao and Wang, Yang and Qi, Feng and Tarokh, Vahid and Rangadurai, Kaushik and Yang, Shuang},
+  year          = {2025},
+  eprint        = {2510.16996},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@misc{lei2025pragma,
+  title         = {PRAGMA: A Profiling-Reasoned Multi-Agent Framework for Automatic Kernel Optimization},
+  author        = {Lei, Kelun and Yang, Hailong and Zhang, Huaitao and You, Xin and Zhang, Kaige and Luan, Zhongzhi and Liu, Yi and Qian, Depei},
+  year          = {2025},
+  eprint        = {2511.06345},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.DC}
+}
+
+@misc{saba2026cutegen,
+  title         = {CuTeGen: An LLM-Based Agentic Framework for Generation and Optimization of High-Performance GPU Kernels using CuTe},
+  author        = {Saba, Tara and Ouyang, Anne and Si, Xujie and Long, Fan},
+  year          = {2026},
+  eprint        = {2604.01489},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@misc{hari2026ucutlass,
+  title         = {Improving Efficiency of {GPU} Kernel Optimization Agents using a Domain-Specific Language and Speed-of-Light Guidance},
+  author        = {Hari, Siva Kumar Sastry and Balaji, Vignesh and Damani, Sana and Huang, Qijing and Kozyrakis, Christos},
+  year          = {2026},
+  eprint        = {2603.29010},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@inproceedings{qimengkernel2026,
+  title         = {{QiMeng-Kernel}: Macro-Thinking Micro-Coding Paradigm for {LLM}-Based High-Performance {GPU} Kernel Generation},
+  author        = {Zhu, Xinguo and Peng, Shaohui and Guo, Jiaming and Chen, Yunji and Guo, Qi and Wen, Yuanbo and Qin, Hang and Chen, Ruizhi and Zhou, Qirui and Gao, Ke and Wu, Yanjun and Zhao, Chen and Li, Ling},
+  booktitle     = {Proceedings of the AAAI Conference on Artificial Intelligence (AAAI)},
+  year          = {2026}
+}
+
+@misc{swizzleperf2025,
+  title         = {{SwizzlePerf}: Hardware-Aware {LLMs} for {GPU} Kernel Performance Optimization},
+  author        = {Tschand, Arya and Awad, Muhammad and Swann, Ryan and Ramakrishnan, Kesavan and Ma, Jeffrey and Lowery, Keith and Dasika, Ganesh and Reddi, Vijay Janapa},
+  year          = {2025},
+  eprint        = {2508.20258},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@inproceedings{kwon2026cove,
+  title         = {Compiler-Runtime Co-operative Chain of Verification for {LLM}-Based Code Optimization},
+  author        = {Kwon, Hyunho and Shin, Sanggyu and Lee, Ju Min and Youm, Hoyun and Song, Seungbin and Kim, Seongho and Jung, Hanwoong and Lee, Seungwon and Kim, Hanjun},
+  booktitle     = {Proceedings of the 2026 IEEE/ACM International Symposium on Code Generation and Optimization (CGO)},
+  year          = {2026}
+}
+
+@misc{tang2026colt,
+  title         = {{COLT}: Lightweight Multi-{LLM} Collaboration through Shared {MCTS} Reasoning for Model Compilation},
+  author        = {Tang, Annabelle Sujun and Priebe, Christopher and Qin, Lianhui and Esmaeilzadeh, Hadi},
+  year          = {2026},
+  eprint         = {2602.01935},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@inproceedings{tritongym2026,
+  title         = {{TritonGym}: A Benchmark for Agentic {LLM} Workflows in {Triton} {GPU} Code Generation},
+  note          = {Code and leaderboard available at \url{https://github.com/yil384/TritonGym}},
+  author        = {{Anonymous}},
+  booktitle     = {Submitted to the International Conference on Learning Representations (ICLR)},
+  year          = {2026},
+  note          = {Under review}
+}
+
+@inproceedings{crupi2026slmjudge,
+  title         = {Improving Code Generation via Small Language Model-as-a-judge},
+  author        = {Crupi, Giuseppe and Tufano, Rosalia and Bavota, Gabriele},
+  booktitle     = {Proceedings of the IEEE/ACM 48th International Conference on Software Engineering (ICSE)},
+  year          = {2026}
+}
+
+@misc{zhang2026compilerstack,
+  title         = {The New Compiler Stack: A Survey on the Synergy of {LLMs} and Compilers},
+  author        = {Zhang, Shuoming and Zhao, Jiacheng and Yu, Qiuchu and Xia, Chunwei and Wang, Zheng and Feng, Xiaobing and Cui, Huimin},
+  year          = {2026},
+  eprint        = {2601.02045},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.PL}
+}
+
+@misc{gong2025codeopt_survey,
+  title         = {Language Models for Code Optimization: Survey, Challenges and Future Directions},
+  author        = {Gong, Jingzhi and Voskanyan, Vardan and Brookes, Paul and Wu, Fan and Jie, Wei and Xu, Jie and Giavrimis, Rafail and Basios, Mike and Kanthan, Leslie and Wang, Zheng},
+  year          = {2025},
+  eprint        = {2501.01277},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE}
+}
+
+%% === v3.3 신규 관련연구 (2026-06) ===
+@misc{li2026agentcompile,
+  title         = {{AgentCompile}: An {LLM}-Guided Compiler for Direct {CUDA} Inference},
+  author        = {Li, Xuanzhe and Weng, Ziyan and Zhu, Zhiyu and Hou, Junhui},
+  year          = {2026},
+  eprint        = {2606.07665},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.PL}
+}
+@misc{dai2026cudaagent,
+  title         = {{CUDA} {Agent}: Large-Scale Agentic Reinforcement Learning for High-Performance {CUDA} Kernel Generation},
+  author        = {Dai, Weinan and Wu, Hanlin and Yu, Qiying and Gao, Huan-ang and others},
+  year          = {2026},
+  eprint        = {2602.24286},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+@misc{cheng2026musacoder,
+  title         = {{MusaCoder}: Native {GPU} Kernel Generation with Full-Stack Training on {Moore Threads} {GPU}s},
+  author        = {Cheng, Kun and Lu, Songshuo and Liao, Sicong and Li, Tankun and Zhang, Yafei and others},
+  year          = {2026},
+  eprint        = {2606.04847},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV}
+}
+@misc{jaber2026automegakernel,
+  title         = {{AutoMegaKernel}: A Statically-Checked Agent Harness for Self-Retargeting Megakernel Synthesis},
+  author        = {Jaber, Jaber and Jaber, Osama},
+  year          = {2026},
+  eprint        = {2606.09682},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+@inproceedings{sereda2026kforge,
+  title         = {{KForge}: {LLM}-Driven Cross-Platform Kernel Generation for {AI} Accelerators},
+  author        = {Sereda, Taras and Bartan, Burak and Nayak, Ankita and St. John, Tom and Serrino, Natalie and Asgar, Zain},
+  booktitle     = {Machine Learning for Architecture and Systems Workshop (MLArchSys), co-located with ISCA},
+  year          = {2026},
+  eprint        = {2606.02963},
+  archivePrefix = {arXiv}
+}
+@misc{huang2026kernelfoundry,
+  title         = {{Kernel Foundry}: A Diagnosis-driven Evolutionary Kernel Optimizer with Multi-Experts},
+  author        = {Huang, Zixuan and Chen, Da and Huang, Kecheng and Yin, Lihao and Li, Xing and Zhen, Huiling and Yuan, Mingxuan and Shao, Zili},
+  year          = {2026},
+  eprint        = {2605.30359},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.NE}
+}
+@inproceedings{chong2026feedback2plan,
+  title         = {Towards Feedback-to-Plan Decisions for Self-Evolving {LLM} Agents in {CUDA} Kernel Generation},
+  author        = {Chong, Yee Hin and Wu, Jiaming and Zhang, Youhui and Qu, Peng},
+  booktitle     = {Proceedings of the International Conference on Machine Learning (ICML)},
+  year          = {2026},
+  eprint        = {2605.26720},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI}
+}
+
+@inproceedings{drkernel2026,
+  title         = {{Dr. Kernel}: Reinforcement Learning Done Right for {Triton} Kernel Generations},
+  author        = {Liu, Wei and Xu, Jiawei and Li, Yingru and Zheng, Longtao and Li, Tianjian and Liu, Qian and He, Junxian},
+  booktitle     = {Proceedings of the 43rd International Conference on Machine Learning (ICML)},
+  year          = {2026},
+  note          = {KernelGYM environment and code available at \url{https://github.com/hkust-nlp/KernelGYM}}
+}
+
+@inproceedings{egg2026,
+  title         = {{EGG}: An Expert-Guided Agent Framework for Kernel Generation},
+  author        = {Han, Yaochen and Fan, Ke and Jiang, Hongxu and Xu, Wanqi and Xie, Weiyu and Zhang, Runhua and Zhu, Chenhui and Zhang, Yixiang},
+  booktitle     = {Proceedings of the 43rd International Conference on Machine Learning (ICML)},
+  year          = {2026}
+}
+
+@inproceedings{lego2026,
+  title         = {{LEGO}: An {LLM}-Enabled Hierarchical Optimizer for Tensor Computation Graphs with Structure-Aware Search and Compositional Synthesis},
+  author        = {Xu, Ruiyuan and Zhang, Shuoming and Li, Guangli and Yu, Qiuchu and Zhang, Rui and Zhang, Yangyu and Qian, Hao and Xia, Chunwei and Zhao, Jiacheng and Wang, Chenxi and Feng, Xiaobing and Xue, Jingling and Cui, Huimin},
+  booktitle     = {Proceedings of the 43rd International Conference on Machine Learning (ICML)},
+  year          = {2026},
+  note          = {Code available at \url{https://github.com/mmt-at/LEGO}}
+}
+
+@inproceedings{kernelband2026,
+  title         = {{KernelBand}: Steering {LLM}-Based Kernel Optimization via Hardware-Aware Multi-Armed Bandits},
+  author        = {Ran, Dezhi and Xie, Shuxiao and Ji, Mingfang and Liu, Anmin and Wu, Mengzhou and Cao, Yuan and Guo, Yuzhe and Yu, Hao and Li, Linyi and Hu, Yitao and Yang, Wei and Xie, Tao},
+  booktitle     = {Proceedings of the 43rd International Conference on Machine Learning (ICML)},
+  year          = {2026},
+  note          = {Code available at \url{https://github.com/TongmingLAIC/KernelBand}}
+}
+
+@misc{flashinferbench2025,
+  title        = {{FlashInfer-Bench}: Building the Virtuous Cycle for {AI}-driven {LLM} Systems},
+  author       = {{FlashInfer Team}},
+  year         = {2025},
+  howpublished = {\url{https://github.com/flashinfer-ai/flashinfer-bench}},
+  note         = {Benchmark suite of production LLM serving kernels; blogpost at
+                  \url{https://flashinfer.ai/2025/10/21/flashinfer-bench.html}}
+}

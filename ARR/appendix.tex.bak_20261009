@@ -1,0 +1,488 @@
+%% Appendix of the ARR submission. Built from the former supplementary material.
+%% Included from main.tex after \appendix; ARR requires appendices in the same PDF,
+%% after the references, in double-column format.
+
+%% ============================================================
+\section{Implementation of the Harness}
+
+\subsection{Isolated scoring}
+We evaluate every kernel in its own subprocess. The subprocess loads the generated module, runs the
+correctness check and the timing loop, and writes the result as one JSON line on standard output.
+The parent process reads that line and collects the results. This design is required, not optional.
+The CUDA runtime keeps state per process, so if one bad kernel corrupts the context, then every
+later evaluation in the same process fails as well. Without isolation, a sequential run over 250
+tasks is not meaningful.
+
+\subsection{Correctness check and chunked comparison}
+We draw five random inputs and accept the kernel when the absolute error against the reference stays
+below $10^{-2}$. A simple comparison allocates temporary tensors for the absolute difference, for
+the tolerance, and for the mask. Each of these has the size of the output, so the peak memory grows
+to three or four times the size of the output. On a 48GB GPU these temporary tensors alone made
+\emph{correct} kernels fail with out of memory. To avoid this we compare in chunks of 64 million
+elements and we also collect diagnostic statistics during the comparison. We free the input tensors
+right after the forward pass, and we run the workers with an allocator option that reduces memory
+fragmentation. For speed we take the median of ten runs, and the speedup is the reference time
+divided by the generated time.
+
+\subsection{Prompt structure}
+The system prompt states the hardware facts of the target GPU. It gives the shared memory size,
+which is about 100KB or 101{,}376 bytes, the amount of device memory, the memory bandwidth, and the
+peak throughput. It also gives simple tile size rules, for example a block size of 64 or less for
+matrix multiplication and a block size of 1024 for element-wise work. We also inject a small
+database of Triton patterns and a set of architecture hints. The user prompt contains the full
+PyTorch reference and the \textbf{input dtype contract}. The contract tells the model that it must
+not guess the dtype of the reference inputs and must not cast them. Without this contract the model
+writes a kernel that assumes fp16, and every such kernel fails on an fp32 reference. The repair
+prompt adds the previous code, the error message, and the index of the current round. We require the
+answer to be a single Python code block that contains a \texttt{Model} class derived from
+\texttt{torch.nn.Module} and a kernel function with the \texttt{@triton.jit} decorator.
+
+\subsection{Safety rules in the repair loop}
+The loop enters the optimization stage only after the kernel is correct. If the values do not match,
+we do not try to make the kernel faster. If the loop makes no progress for a fixed number of rounds,
+we throw away the accumulated context and the previous code, and we generate again from scratch.
+This second rule helps when the context is polluted, for example after an illegal memory access, but
+it does not help when the model simply cannot solve the task. In our runs the two cases were easy to
+tell apart. Tasks that a context reset rescued were different from tasks that failed even after two
+resets, and the second group was concentrated on three-dimensional and four-dimensional tensor
+products and on transposed matrix multiplication.
+
+\subsection{Response parsing and multiple APIs}
+The parser extracts the Markdown code block, renames the class to \texttt{Model}, and removes any
+prose that is not Triton code. This step absorbs the different output styles of different models.
+Commercial models use the chat completion API. Reasoning models do not accept a temperature
+parameter, so they use the response API instead. Open models use the completion API of a local vLLM
+server, and the quantized model uses llama.cpp. The client detects the right API from the model
+identifier, falls back when the first call fails, and caches the result so that it does not repeat
+the same detection on every call.
+
+%% ============================================================
+\section{Budget Settings and Wall-Clock Cost}\label{sec:app-budget}
+
+The small budget is one sample and up to three repair rounds. We use it for full sweeps over 250
+tasks. The large budget is three samples and up to nine repair rounds, which is at most 27 attempts
+per task. The multi-turn curve changes only the number of effective turns, from 1 up to 14.
+
+A full sweep under the large budget is dominated by wall-clock cost. On a slow local server, 27
+attempts per task did not fit into a two-hour limit. As a result 59 percent of the tasks did not
+finish, and the whole sweep took 22.9 hours. If we break down the result, 29 tasks were correct and
+9 tasks were wrong after a normal evaluation, so only 38 tasks finished. The rest were 59 worker
+timeouts and 3 tasks with no result. One point is worth noting. Several tasks first looked like
+tasks that failed all 27 attempts, but in fact they were all timeouts and not wrong answers. A
+reader who only looks at the surface accuracy can easily read this as a limit of model ability.
+
+We draw three design rules from this. First, set the worker timeout from the number of attempts
+times the average time per attempt, and not from a fixed guess. Second, keep the number of workers
+below the number of concurrent serving slots. Third, draw the samples of best-of-$N$ in parallel and
+not one after another.
+
+Parallelism at the task level was harmful. When we ran two tasks at the same time, the serving slots
+saturated, the throughput per slot dropped by more than half, generation exceeded the client
+timeout, and the retry loop repeated forever, so no task finished at all. Sequential execution was
+the better choice in our setting.
+
+%% ============================================================
+\section{Raw Data of the Repair-Round Ablation}
+
+Table~\ref{tab:ablation} gives the full numbers behind Table~\ref{tab:rq4a} of the main text.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\caption{Effect of the number of repair rounds on accuracy and on the error profile.
+Model is gpt-4o and the task set is KernelBench Level~1.}
+\label{tab:ablation}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\headrow{Rounds} & \headrow{Solved (/100)} & \headrow{Compile err.} & \headrow{Value mism.} \\
+\midrule
+1  & 19 & 59.3\% & 24.7\% \\
+3  & 21 & 51.9\% & 39.2\% \\
+5  & 19 & 45.7\% & 37.0\% \\
+10 & 22 & 32.1\% & 53.8\% \\
+\midrule
+\textbf{Union} & \textbf{28} & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+As the number of rounds grows, the share of compilation errors falls from 59.3 percent to 32.1
+percent, while the share of value mismatches rises from 24.7 percent to 53.8 percent. Iterative
+repair fixes syntax errors well, but it does not fix semantic errors on its own. This matches the
+error transition finding of the main text. The union over the runs grows as 19, 25, 26, and 28, so
+it always stays above the best single run, which solved 22 tasks.
+
+%% ============================================================
+\section{Details of Model Cascading}
+
+The main text only reports the conclusion of the cascade experiment. Table~\ref{tab:cascading}
+gives the accumulated result of each stage.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Accumulated accuracy of the cascade. Each stage only runs on the tasks that the previous
+stage failed.}
+\label{tab:cascading}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\headrow{Configuration} & \headrow{L1} & \headrow{L2} & \headrow{L3} & \headrow{Total (/250)} \\
+\midrule
+gpt-4o-mini            & 15 & 1  & 0 & 16 \ (6.4\%) \\
+gpt-4o                 & 19 & 6  & 0 & 25 \ (10.0\%) \\
+gpt-4o $+$ gpt-5.2     & 42 & 15 & 4 & 61 \ (24.4\%) \\
+\quad $+$ gpt-5.2-pro  & 43 & 15 & 4 & 62 \ (24.8\%) \\
+\midrule
+claude-opus-4-7 alone  & 46 & -- & -- & -- \\
+opus $+$ gpt-5.4-nano  & 48 & -- & -- & -- \\
+union of five models   & \textbf{51} & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+We observe three things. First, adding the next generation model to gpt-4o raises the total from 25
+tasks to 61 tasks, which is a factor of 2.44. The 36 new tasks are 23 tasks on Level~1, 9 tasks on
+Level~2, and 4 tasks on Level~3. Second, the expensive reasoning model adds almost nothing. It ran
+on 225 tasks and added only one task, a Level~1 task with a speedup of 7.60 times. If we also
+consider its cost and its response time, its value inside a cascade is close to zero. Third, one
+recent flagship model alone, with 46 tasks, already beats the earlier three-model cascade with 43
+tasks. The union of five models, with 51 tasks, still beats the best single model by 10.9 percent,
+so the value of independent samples does not disappear in the newest generation.
+
+%% ============================================================
+\section{Error Distribution by Level}
+
+Table~\ref{tab:rq3} of the main text only covers Level~1. Table~\ref{tab:error_detail} covers all three levels.
+The timeout column counts our own response and evaluation time limits together with unclassified
+runtime errors. It is not a constraint of the benchmark.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Share of each error type among failed tasks, by model and by level.}
+\label{tab:error_detail}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}llrrrrr@{}}
+\toprule
+\headrow{Model} & \headrow{Lv.} & \headrow{Failed} & \headrow{Compile} & \headrow{Value} & \headrow{CUDA} & \headrow{Timeout} \\
+\midrule
+\multirow{3}{*}{gpt-4o-mini}
+  & L1 & 85 & 71.8\% & 20.0\% & 2.4\% & 2.4\% \\
+  & L2 & 99 & 70.7\% & 22.2\% & 4.0\% & 1.0\% \\
+  & L3 & 50 & 82.0\% & 6.0\%  & 6.0\% & 0\% \\
+\midrule
+\multirow{3}{*}{gpt-4o}
+  & L1 & 81 & 45.7\% & 37.0\% & 11.1\% & 0\% \\
+  & L2 & 94 & 51.1\% & 41.5\% & 4.3\%  & 0\% \\
+  & L3 & 50 & 38.0\% & 56.0\% & 4.0\%  & 0\% \\
+\midrule
+\multirow{3}{*}{gpt-5.2}
+  & L1 & 58 & 6.9\%  & 58.6\% & 1.7\% & 20.7\% \\
+  & L2 & 85 & 25.9\% & 62.4\% & 0\%   & 8.2\%  \\
+  & L3 & 46 & 17.4\% & 71.7\% & 0\%   & 4.3\%  \\
+\midrule
+gpt-5.5         & L1 & 63 & 71\% & 3\%  & 0\% & 25\% \\
+claude-opus-4-7 & L1 & 54 & 0\%  & 65\% & 0\% & 28\% \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+The error transition appears at every level. For gpt-4o-mini the compilation error is dominant at
+all three levels, and for gpt-5.2 the value mismatch is dominant at all three levels. Inside one
+model the same shift also appears with difficulty. For gpt-4o the share of value mismatches grows
+from 37.0 percent on Level~1 to 56.0 percent on Level~3, so failures become more semantic as the
+task becomes harder.
+
+For the reasoning model gpt-5.2-pro, 100 percent of the Level~1 failures and 81.9 percent of the
+Level~2 failures were timeouts. On Level~3 all failures came from API rate limits. That is a
+different cause, so we do not merge it into the timeout column.
+
+%% ============================================================
+\section{Details of the Speedup Results}
+
+We only measure speedup on kernels that pass the correctness check. Table~\ref{tab:fast} reports the
+result.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\caption{Share of correct kernels that reach the Fast-1 and Fast-2 thresholds. The denominator is
+the number of correct kernels for that model.}
+\label{tab:fast}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\headrow{Model} & \headrow{Fast-1} & \headrow{Fast-2} \\
+\midrule
+gpt-4o-mini     & 7/16 \ (43.8\%)  & 1/16 \ (6.3\%)  \\
+gpt-4o          & 12/25 (48.0\%)   & 4/25 \ (16.0\%) \\
+gpt-5.2         & 25/36 (69.4\%)   & 5/36 \ (13.9\%) \\
+gpt-5.2-pro     & 10/13 (76.9\%)   & 3/13 \ (23.1\%) \\
+gpt-5.4-nano    & 21/35 (60.0\%)   & 10/35 (28.6\%)  \\
+gpt-5.5         & 22/37 (59.5\%)   & 8/37 \ (21.6\%) \\
+claude-opus-4-7 & 29/46 (63.0\%)   & 14/46 (30.4\%)  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Fast-2 share grows from 6.3 percent to 30.4 percent across model generations, so newer models
+write not only more correct kernels but also better optimized ones. The reasoning model is an
+interesting exception. It solved only 13 tasks, which is the smallest number in the table, yet its
+Fast-2 share is 23.1 percent, which is high. When a reasoning model does solve a task, it tends to
+write a well optimized kernel. Its overall success rate is low, however, so its practical value
+stays limited.
+
+The largest single speedup that we observed was 84.03 times on one Level~3 task. Other high cases
+were 25.45 times, 19.10 times, and 11.86 times. These cases show that a generated Triton kernel can
+beat the default PyTorch implementation by a wide margin on some operation patterns. Speedup still
+depends on the hardware baseline, so these numbers are only comparable inside one hardware setting.
+
+%% ============================================================
+\section{Details of the Reused Open Artifacts}
+
+The main text only reports the result of each port. Here we describe how each artifact is built and
+what happened when we ran it.
+
+\subsection{Failure-rule memory}
+The system turns each failure into one short rule of the form ``you must not do this'', stores the
+rule together with a score, removes duplicates after normalization, and injects the top rules into
+the generation prompt. In one full evaluation the store collected between 73 and 80 distinct rules.
+Examples are a rule that says the kernel body must not call PyTorch operations, rules about the
+dimensions of a matrix multiplication and about the block size along the reduction axis, and rules
+about contiguity assumptions. The cost is one extra model call per failure, which is cheap, and this
+was the most portable artifact that we reused.
+
+The risk, however, is not symmetric. A good rule saves a few attempts, while a wrong rule with a
+high score can block a whole class of tasks. In our runs the rules that the system collected while
+the evaluation harness was still broken polluted the store. The polluted store held 320 rules. Some
+of them treated an infrastructure defect as a rule for the model, for example a rule that said the
+GPU does not have enough memory to run the kernel. These rules had a high score and filled the top
+of the prompt. As a result the model failed on tasks as simple as a square matrix multiplication,
+even with nine repair rounds and three samples. Accuracy recovered after we cleared the store. There
+are two lessons. The store must be cleared after any infrastructure fix, and in a multi-server setup
+with a shared store the pollution spreads from one server to the other.
+
+\subsection{The Triton-specific reinforcement learning model}
+We served the released weights on a local vLLM server. This model does not support the system role
+of the chat format, so our first calls failed. We changed the client to fold the system message into
+the user prompt, and the calls then worked. On the first 20 tasks of Level~1 the model reached 0.85
+on the 96GB GPU and 0.95 on the H100. The H100 result is higher because the model needs only about
+16GB, so the scorer still had more than 55GB and no task failed with out of memory. Under the same
+conditions the 30B general open model reached only 0.60 on the H100. A small specialized model
+therefore beats a large general model and at the same time leaves more memory for the scorer, which
+matters in practice.
+
+\subsection{The open deep-agent framework}
+We cloned the released framework and ran it with our own open models. Three problems appeared during
+the port. First, the serving context length decides whether repair works at all. With a 16K context
+the repair prompt, which grows with the code and the error text, exceeded the input and output
+limit, and every round was lost. With a 64K context the same tasks were solved in a few tens of
+seconds. Second, installing an external project into a shared environment breaks the dependencies.
+The editable install of the framework raised the version of shared packages, and the serving engine
+then failed to start. An external project must be installed into its own virtual environment. Third,
+the shell command returned an exit code of zero even when the HTTP response was an error, and we
+twice concluded that the server was healthy when it was not. A health check must look at the status
+code of a real completion call.
+
+We also note that this framework verifies its answers with tests that the model itself writes, and
+its tolerance is looser than ours. Its accuracy numbers and our accuracy numbers therefore use
+different verification strengths, which is one more reason why numbers from different systems should
+not be compared directly.
+
+\subsection{The multi-turn reinforcement learning environment}
+We reproduced the released environment on the 100 tasks of Level~2. Table~\ref{tab:repro} gives the
+metrics that the main text does not list.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{7pt}
+\caption{Reproduction of the released multi-turn reinforcement learning environment on KernelBench
+Level~2 with 100 tasks. All values are computed over all tasks.}
+\label{tab:repro}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\headrow{Metric} & \headrow{Original paper} & \headrow{Our reproduction} \\
+\midrule
+Fast@1   & 49.2\% & 42.9\% \\
+Fast@1.2 & 25.6\% & 24.3\% \\
+Fast@1.5 & 7.4\%  & 12.9\% \\
+Fast@2   & 2.1\%  & 7.5\%  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Fast@1.2 is almost the same and Fast@1.5 and Fast@2 are higher, so we judge the reproduction to be
+successful. Fast@1 is 6 points lower, which we attribute to a different GPU and to sampling noise.
+Correctness alone was 76.3 percent, and pass@1 under a loose threshold was 85.7 percent.
+
+The infrastructure cost was high. The grading path of the trainer needs the FSDP actor and the vLLM
+rollout engine in the same memory, and five attempts on a single 96GB GPU all failed. An eight-GPU
+node was in practice the minimum requirement. We also had to clear the existing cluster completely
+before each run, because leftover processes of a different version attached themselves to our job.
+The released validation data covers Level~2 only, so the same reproduction on Level~1 and Level~3
+would need a new data set in the same format. The point of this subsection is that reproducibility
+does not imply accessibility.
+
+%% ============================================================
+\section{Details of the Quantization Study}
+
+We loaded a very large open reasoning model with aggressive quantization and evaluated it under the
+same protocol. We served it with layer-split pipeline parallelism and we kept one separate GPU for
+scoring.
+
+The 2-bit version was about 254GB. It reached 0.10 on Level~1 and solved nothing at all on Level~2,
+on Level~3, and on the real serving kernels. It needed about 8.5 hours per level and 21.5 hours in
+total. It spent about 2{,}600 tokens of thinking per attempt with no gain in accuracy. A general
+reasoning model with two orders of magnitude more parameters therefore stayed below half of the 8B
+specialized model.
+
+The 4-bit version was about 467GB, which was the highest precision that fit into our serving budget.
+Accuracy recovered to 0.96 over the tasks that finished inside the time limit, which confirms that
+quantization loss was the cause of the collapse. This version, however, generated only about 8
+tokens per second. As a result 76 percent of the tasks exceeded the two-hour limit, the surface
+accuracy was only 0.23, and the run took 30 hours.
+
+Taken together, under a fixed GPU budget a very large model at low precision loses quality, and the
+same model at full precision loses speed. A mid-size model at full precision is the better choice
+for kernel generation.
+
+%% ============================================================
+\section{Details of the Cross-Benchmark Study}
+
+\subsection{The Triton-specific benchmark}
+This benchmark has 166 tasks and uses a different evaluation style from KernelBench. Each task is a
+PyTorch function together with a test harness, so a scorer that expects a module and an input
+generator cannot run it. We therefore wrote a separate runner. The runner executes the reference and
+the generated code with the same test harness, compares the two result dictionaries, and reports
+both whether the code runs and whether the results match. Over the four combinations of two models
+and two GPUs, execution accuracy stayed inside a narrow band between 0.151 and 0.187, and the
+advantage of the specialized model that we saw on KernelBench disappeared. The suite also contains
+tasks such as optimizer updates, which do not map naturally onto a Triton kernel, so a part of the
+suite is structurally out of reach.
+
+To find the cause of the gap against the original paper, we ran a two-by-two ablation over the prompt
+format and the budget. Aligning the prompt with the training format of the specialized model alone
+did not help, and execution accuracy even fell from 0.151 to 0.127. Turning on the budget raised
+execution accuracy by about 2.3 times and call accuracy by about 2.5 times. Under the larger budget
+the conversion-style prompt, which provides the PyTorch reference, was in fact better than the
+aligned prompt. The gap is therefore explained by single-attempt evaluation and not by a mismatch
+with the training prompt.
+
+\subsection{The standardized agent environment}
+This environment has 139 standard tasks and 13 out-of-distribution tasks. Under a single attempt,
+106 of the 139 standard tasks compiled, and 17 tasks passed both compilation and the correctness
+check, which is 12.2 percent. The geometric mean of the performance of the passing kernels relative
+to the oracle was 0.143, so they were about seven times slower than the oracle, and only three
+kernels were faster than the oracle. The main cause of compilation failure was an import error, with
+29 cases in which the model used a module or a symbol that does not exist. On the 13
+out-of-distribution tasks, 12 tasks compiled but only one task passed, which is 7.7 percent.
+
+With a test-time scaling agent, Pass@1 on the standard tasks rose to 18.0 percent and the geometric
+mean of performance rose to 0.285, which is about twice as high. The compilation rate, however, fell
+to 45.3 percent, because the last proposal of a repair loop sometimes does not compile. On the
+out-of-distribution tasks Pass@1 stayed at 7.7 percent and did not move at all. This is the
+measurement behind the boundary result of the main text.
+
+\subsection{The track for a new domain-specific language}
+The same environment has a track with 12 tasks for a new domain-specific language. Nine of these
+tasks could not run in our environment at all. Some of them need a separate compiler fork, and
+others use an API that only exists in a newer version. On the three tasks for which the oracle could
+run, the specialized reinforcement learning model passed none under a single attempt. The sample is
+small, so we do not draw a quantitative conclusion. We report it as evidence that the collapse
+outside the training distribution is not limited to one axis of one benchmark.
+
+\subsection{The real serving kernel benchmark}
+We took 8 dense tasks from a benchmark of real serving kernels for a recent NVIDIA architecture and
+converted them into the KernelBench format. The conversion turns the reference definition and the
+tensor specification into a module and an input generator. Among the four combinations, only the
+specialized model on the H100 reached 0.25, and the other three stayed at zero. This points to
+differences in the Triton version and in the compute architecture. The attention and mixture-of-expert
+tasks need structured input synthesis, so we leave them for future work.
+
+%% ============================================================
+\section{Details of the Cross-Hardware Study}
+
+Under the same conditions the 30B open model reached 0.75 on the 96GB GPU and 0.60 on the H100 over
+the first 20 tasks of Level~1. The main cause is GPU memory. The H100 has 80GB, so after serving the
+30B model the scorer had only about 43GB, while the 96GB GPU left about 52GB. For tasks with large
+inputs this difference alone decides whether the task fails with out of memory. If we correct for
+the out-of-memory cases, the H100 number rises to about 0.70, which is close to the 96GB GPU. We
+also tried to lower the serving share further, but then the server did not start at all because the
+key-value cache became too small, so this environment has a lower bound.
+
+Speedup behaves in the opposite way and depends strongly on the hardware. On a square matrix
+multiplication we measured 1.61 times on the 96GB GPU and 0.83 times on the H100. The cuBLAS
+baseline of the H100 is very strong, so a generated Triton kernel is at a disadvantage there. The
+median speedup was 1.51 against 1.44, and the Fast-2 share was 0.10 against 0.05.
+
+We repeated the run on a third GPU with 48GB and obtained a similar profile across levels, with 0.37
+on Level~1, 0.12 on Level~2, and 0.04 on Level~3. This supports the conclusion that accuracy is
+almost independent of the GPU when memory is sufficient. This GPU, however, produced only about one
+fourth to one fifth of the throughput of the H100, so the same sweep took about three times longer
+in wall-clock time. Accuracy is independent of the hardware, but whether the experiment can be run
+at all is not.
+
+%% ============================================================
+\section{Practical Notes for Reproduction}\label{sec:notes}
+
+Several operational factors distorted our measurements more than once, and we list them here
+because they are easy to miss and hard to detect from the accuracy number alone.
+
+First, serving and scoring must not compete for the same memory. If the serving process takes too
+large a share of the GPU, even a trivial kernel fails, as Finding~2 shows. Second, a released model
+artifact can carry its own generation limit, and the server clamps the client limit to that value,
+so raising the limit on the client side alone does not remove truncation. Third, a reasoning model
+spends thousands of tokens before it writes code, so the common response limit of the agent
+framework is too small and cuts the answer before the code block. Fourth, the serving context length
+must hold the repair prompt, which grows with the code and the error text, otherwise every repair
+round is lost. Fifth, an experience memory that was filled while the harness was still broken keeps
+poisoning later runs, so the store must be cleared after an infrastructure fix. Sixth, a shared
+store spreads that damage across servers, so each experiment should use its own path.
+
+We also found that parallelism at the task level can be harmful. When we ran two tasks at the same
+time, the serving slots saturated, the throughput per slot dropped, generation exceeded the client
+timeout, and the retry loop never terminated, so no task finished at all. Sequential execution was
+the better choice on our hardware.
+
+%% ============================================================
+\section{Hidden Variables and a Reproduction Checklist}
+
+We list the factors that distorted our measurements more than once. They have one thing in common.
+None of them appears in an accuracy report.
+
+\begin{itemize}\itemsep3pt
+\item \textbf{Keep serving memory and scoring memory apart.}
+If the serving process takes too large a share of the GPU, even a trivial kernel fails with out of
+memory. When serving and scoring share one GPU, the serving share must match what the scorer needs.
+\item \textbf{Check the generation limit inside the model artifact.}
+The maximum generation length in the released generation config is clamped by the server. Raising
+the limit on the client side alone does not remove truncation, so the artifact itself must be
+checked.
+\item \textbf{Raise the response token limit of the framework.}
+A reasoning model spends thousands of tokens on its thinking trace before it writes any code. A
+common limit of 8K cuts the answer before the code block and turns a solvable task into a task with
+no code. In our runs, raising the limit to 13{,}000 moved accuracy on the affected range from 0.37
+to 0.78.
+\item \textbf{Make the serving context long enough.}
+The repair prompt grows with the code and with the error text. If the context is short, every repair
+round is lost.
+\item \textbf{Clear the experience memory after an infrastructure fix.}
+Rules that were collected while the harness was broken keep lowering accuracy in a healthy
+environment.
+\item \textbf{Give each experiment its own store path.}
+When several servers share one experience store, the pollution spreads from one experiment to the
+next.
+\item \textbf{Prefer sequential execution on a small serving cluster.}
+If the serving slots saturate, the throughput drops and the retry loop does not terminate.
+\end{itemize}
+
+Finally, we repeat the axes that should be reported next to any accuracy number. These are the
+attempt budget, the verification strength, the memory headroom of the scorer, the serving context
+length, the response token caps of both the framework and the model artifact, and the evaluation
+distribution. A comparison of numbers without these axes is a comparison of measurements from
+different regimes.
+

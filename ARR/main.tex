@@ -1,0 +1,684 @@
+%%
+%% ACL Rolling Review submission (double-blind).
+%% Empirical study of LLM-based Triton GPU kernel generation.
+%% Build: cd ARR && make          (Makefile isolates TEXMFHOME)
+%%
+%% Style files acl.sty / acl_natbib.bst are the unmodified official files from
+%% https://github.com/acl-org/acl-style-files (ARR forbids modifying them).
+%% Long paper: 8 pages of content + unlimited references, Limitations, Ethics, Appendix.
+%% Switch [review] -> [final] for camera-ready, [preprint] for arXiv.
+%%
+\documentclass[11pt]{article}
+
+%% ARR: the "review" option anonymizes the author block, adds line numbers and page numbers.
+\usepackage[review]{acl}
+
+%% Standard package includes from the official template
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{inconsolata}
+\usepackage{graphicx}
+
+%% Packages this paper needs beyond the template
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows.meta, positioning, fit, backgrounds, calc}
+
+%% Table style: a little more air between rows, and a shared header rule.
+\renewcommand{\arraystretch}{1.12}
+\newcommand{\headrow}[1]{\textbf{#1}}
+
+%% Finding box: shaded, italic body, fits the column.
+\newlength{\findingwidth}
+\newcommand{\finding}[2]{%
+  \par\vspace{3pt}\noindent
+  \setlength{\findingwidth}{\columnwidth}%
+  \addtolength{\findingwidth}{-2\fboxsep}%
+  \addtolength{\findingwidth}{-2\fboxrule}%
+  \addtolength{\findingwidth}{-6pt}%
+  \fcolorbox{black!55}{black!8}{%
+    \hspace{2pt}%
+    \begin{minipage}{\findingwidth}%
+      \vspace{3pt}\small\textbf{Finding #1.}\ \textit{#2}\vspace{3pt}%
+    \end{minipage}%
+    \hspace{2pt}}%
+  \par\vspace{4pt}}
+
+\title{What Decides the Reported Accuracy? \\ An Empirical Study of LLM-Based Triton GPU Kernel Generation}
+
+%% Ignored in review mode; acl.sty prints "Anonymous ACL submission" instead.
+\author{First Author \\
+  Affiliation / Address line 1 \\
+  \texttt{email@domain} \\}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+Many recent papers use large language models to write GPU kernels, and they report
+accuracy on the same benchmark. The reported numbers, however, are very far apart.
+Some papers report almost zero, and other papers report one hundred percent.
+This paper does not propose a new generation system. Instead, we ask what causes this gap.
+We measure 8 commercial models and 4 open models on three GPUs and on four benchmarks,
+and we use one fixed evaluation harness for every run. We also take released artifacts from
+earlier work, such as a Triton-specific reinforcement learning model, an agent framework,
+a failure-rule memory, and profiling feedback, and we run them in our own setting.
+We report eight findings. A large part of the gap does not come from the model at all.
+It comes from the evaluation setup and from hidden limits in the serving stack. One such
+defect alone moves accuracy from 0.45 to 0.75. Most of the rest of the gap comes from the
+test-time compute budget. The same free 8B open model reaches 0.44 under a small budget and
+0.95 under a large budget. A larger budget, however, only helps inside the training
+distribution. Outside it, and on a new domain-specific language, a larger budget changes
+nothing. We also find that breadth beats depth, and that domain specialization beats model
+size. We close with the six axes that a paper should report together with its accuracy number.
+\end{abstract}
+
+%% ============================================================
+\section{Introduction}\label{sec:introduction}
+
+GPU kernels decide much of the cost of deep learning systems. Writing a fast kernel by hand
+is hard, because the programmer must reason about the memory hierarchy, about thread
+synchronization, and about warp-level behavior~\citep{kirk2016programming}. OpenAI
+Triton~\citep{tillet2019triton} lowers this barrier. It offers a tile-based programming model in
+Python and leaves many low-level choices to the compiler. Triton became the default backend of
+\texttt{torch.compile} in PyTorch~2.0~\citep{ansel2024pytorch2}, so it is now a natural target for
+automatic code generation. Many groups therefore try to generate Triton and CUDA kernels with
+large language models, and they measure the result on
+KernelBench~\citep{ouyang2024kernelbench}, which has become the standard benchmark.
+
+The problem is that the reported numbers do not agree. KernelEvolve reports one hundred
+percent~\citep{liao2026kernelevolve}. CudaForge reports 97.6 percent~\citep{cudaforge2025}. QiMeng
+reports near-perfect accuracy on the first two levels~\citep{qimengkernel2026}. At the same time,
+other studies on the same benchmark report single-digit accuracy. A reader cannot tell whether
+this gap comes from model ability, from search budget, or from the measurement setup itself.
+Each paper uses a different number of attempts, a different verification strength, and a
+different serving stack, and most papers do not report these settings at all.
+
+This paper is therefore not a system paper. We do not propose a new generator, a new agent,
+or a new training method. We audit the current state of the field. We fix one evaluation
+harness and then change one axis at a time on top of it. We vary the model, the GPU, the
+benchmark, and the compute budget. We also take artifacts that earlier work has released,
+including a Triton-specific reinforcement learning model~\citep{li2025autotriton}, a multi-turn
+reinforcement learning model together with its training environment~\citep{drkernel2026}, an open
+deep-agent framework, a failure-rule memory~\citep{du2026adaexplore}, and profiling
+feedback~\citep{cudaforge2025}. We run each of them in our own setting and we report where the
+reported benefit holds and where it breaks. We organize the study around five questions.
+RQ1 asks how accurate current models really are under one common setting. RQ2 asks how much
+the measurement setup alone decides the reported number. RQ3 asks what the failures look like
+and how they change as models improve. RQ4 asks what actually raises accuracy, that is, depth
+of repair, breadth of sampling, test-time budget, or reinforcement learning. RQ5 asks whether
+the artifacts of earlier work transfer to another harness and to another distribution.
+
+We organized more than one hundred related papers into eight groups, namely CUDA generation,
+Triton generation, reinforcement learning, agent and evolutionary frameworks, compiler and IR
+level work, benchmarks, evaluation methodology, and supervised foundation models. Two gaps
+became visible. First, many papers propose a single technique, but we did not find a paper that
+compares several models, several GPUs, and several benchmarks under one controlled harness.
+Second, papers that report perfect accuracy always assume a large attempt budget, such as
+unbounded tree search, repeated repair with profiling, or large-scale reinforcement learning,
+yet they do not report the single-attempt number next to it. The individual parts that we use,
+such as iterative repair, best-of-$N$ sampling, model cascading, and failure-rule reuse, are all
+known. What is new here is the controlled measurement on top of them.
+
+Our contribution is a set of findings rather than a new method, and we state them here so that
+this section alone is enough to see the result of the study. First, the newest commercial
+flagship models converge to almost the same behavior below a certain difficulty, and a free 8B
+Triton-specific open model reaches the same level, so specialization beats size. Second,
+changing only the evaluation infrastructure and the hidden serving limits, and not the model,
+moves accuracy by up to 0.30, so accuracy numbers are not comparable across papers unless
+these settings are stated. Third, as models get better, the dominant failure moves from
+compilation errors to value mismatches, which also explains why profiling feedback does not
+help before correctness is solved. Fourth, independent samples help more than deeper repair of
+a single sample. Fifth, the gap between our full-benchmark numbers and the perfect scores in
+the literature is mostly a difference of budget regimes, and reinforcement learning and budget
+are complements rather than substitutes. Sixth, an agent framework improves search efficiency
+but does not raise the ceiling of the base model, so a strong open model with an open framework
+can reach a perfect score without any commercial model. Seventh, aggressive quantization
+destroys quality on harder tasks, while full precision on a very large model destroys
+throughput, so a mid-size model at full precision is the practical choice. Eighth, and most
+important as a limit of the whole picture, a larger budget only helps inside the training
+distribution. Out-of-distribution tasks and a new domain-specific language do not improve at
+all. From these findings we derive six axes that future papers should report next to accuracy.
+
+%% ============================================================
+\section{Related Work}\label{sec:related}
+
+\paragraph{Benchmarks and learning.}
+KernelBench~\citep{ouyang2024kernelbench} defines 250 tasks in three levels and asks the model to
+turn a PyTorch reference into an equivalent GPU kernel. TritonBench~\citep{li2025tritonbench}
+collects real Triton operators from GitHub, and TritonGym~\citep{tritongym2026} standardizes tool
+access so that model ability and workflow design can be measured apart from each other.
+Several surveys track this fast-moving
+area~\citep{yu2026automated_kernel_survey, zhang2026compilerstack, gong2025codeopt_survey}.
+On the learning side, AutoTriton~\citep{li2025autotriton} combines supervised training and GRPO and
+reports commercial-level quality from an 8B model. TritonRL~\citep{woo2025tritonrl} uses verifiable
+rewards to suppress reward hacking, and DRTriton~\citep{drtriton2025} uses large synthetic data.
+For CUDA, CUDA-L1~\citep{cudal1_2026} uses contrastive reinforcement learning and
+Kevin~\citep{baronio2025kevin} uses multi-turn reinforcement learning. \citet{tehrani2026gpt5kernel} fine-tune a frontier model and raise single-attempt accuracy.
+Dr.\,Kernel~\citep{drkernel2026} names two failure modes of kernel reinforcement learning, namely
+reward hacking and lazy optimization, and releases both a distributed environment and a
+multi-turn advantage estimator. CUDA Agent~\citep{dai2026cudaagent} and
+MusaCoder~\citep{cheng2026musacoder} extend this line to large agentic training and to a new
+accelerator. All of these methods need data curation and a large amount of compute. We do not
+train anything. We download what these papers release, we run it in our harness, and we ask
+whether the reported benefit survives a change of harness and a change of distribution.
+
+\paragraph{Agent frameworks.}
+A second line uses a fixed model inside a repair loop and adds no training.
+GEAK~\citep{wang2025geak} uses a generator, a reflector, an evaluator, and an optimizer.
+CudaForge~\citep{cudaforge2025} adds hardware profiling metrics. EGG~\citep{egg2026} splits kernel
+generation into algorithm design and hardware tuning, and KernelBand~\citep{kernelband2026} treats
+optimization as a bandit problem. STARK~\citep{stark2026} separates planning, coding, and
+debugging, and PRAGMA~\citep{lei2025pragma} turns profiling data into explicit reasoning steps.
+AccelOpt~\citep{accelopt2025} reuses an experience memory, and
+KernelEvolve~\citep{liao2026kernelevolve} runs tree search across several hardware platforms.
+AdaExplore~\citep{du2026adaexplore} distills repeated failures into reusable rules and keeps search
+diverse. KForge~\citep{sereda2026kforge} and Kernel Foundry~\citep{huang2026kernelfoundry} alternate
+a correctness pass and an optimization pass. Other work reduces the reasoning load by exposing a
+compact language instead of raw CUDA, such as $\mu$CUTLASS~\citep{hari2026ucutlass},
+CuTeGen~\citep{saba2026cutegen}, and QiMeng-Kernel~\citep{qimengkernel2026}, or by adding hardware
+context, such as SwizzlePerf~\citep{swizzleperf2025}. LEGO~\citep{lego2026} moves from single kernels
+to whole model graphs. These frameworks all assume a large attempt budget, and this is exactly
+the axis that we control.
+
+\paragraph{Verification and evaluation.}
+A generated kernel can compile and still be wrong, so verification is now a topic of its own.
+\citet{kwon2026cove} build a verification chain between the compiler and the runtime.
+COLT~\citep{tang2026colt} lets several small models cooperate and escalates to a larger model when
+needed, and \citet{crupi2026slmjudge} train a small model as a judge to pick a correct
+candidate cheaply. AutoMegaKernel~\citep{jaber2026automegakernel} rejects wrong proposals before
+execution with a static checker, and AgentCompile~\citep{li2026agentcompile} keeps the correctness
+decision inside the compiler. The risk of an unverified number is real, because inflated results
+from reward hacking have already been reported~\citep{lange2025aicudaengineer}. We extend this
+concern from verification to the measurement setup as a whole.
+
+%% ============================================================
+\section{Study Design}\label{sec:design}
+
+\input{fig_overview}
+
+Figure~\ref{fig:overview} shows the structure of the study. Every run shares one harness. The
+harness builds the prompt, calls the model, extracts the code from the answer, scores the kernel
+inside an isolated subprocess, classifies the error, and then repairs and retries. The isolation
+step is not an optimization. The CUDA runtime keeps state per process, so a single bad kernel can
+corrupt the context and make every later evaluation in the same process fail. Without isolation a
+sequential run over 250 tasks is not meaningful. For correctness we draw two random inputs and
+require an absolute error below $10^{-2}$ against the reference on both. For speed we take the median of
+ten timed runs and report Fast-0, Fast-1, and Fast-2 as defined by the
+benchmark~\citep{ouyang2024kernelbench}.
+
+We change four axes on top of this fixed harness. The first axis is the model. We use 8
+commercial models, namely gpt-4o-mini, gpt-4o, gpt-5.2, gpt-5.2-pro, gpt-5.4-nano, gpt-5.5,
+gemini-3.1-pro-preview, and claude-opus-4-7. We also use 4 open models, namely
+Qwen3-Coder-30B-A3B~\citep{hui2024qwencoder}, AutoTriton-8B~\citep{li2025autotriton}, a quantized
+GLM-5.2 in a 2-bit and a 4-bit version, and Dr.\,Kernel-14B~\citep{drkernel2026}. The second axis is
+the hardware. We use an RTX PRO 6000 with 96GB, an H100 with 80GB, and an A6000 with 48GB. The
+third axis is the benchmark. We use KernelBench with 250 tasks, TritonBench with 166 tasks,
+TritonGym with 139 standard tasks and 13 out-of-distribution tasks, and FlashInfer-Bench with 8
+dense tasks~\citep{flashinferbench2025}. The fourth axis is the compute budget. We vary the number
+of samples, the number of repair rounds, and the number of effective turns in a multi-turn setting
+from 1 up to 14. Commercial models run through a unified gateway. Open models run on a local vLLM
+server, or on llama.cpp for the quantized model.
+
+The software stack is Triton 3.5.1 on the H100 and Triton 3.6 on the RTX PRO 6000, with PyTorch 2.x,
+Python 3.12, and CUDA 12.x. We call a budget \emph{small} when we take one sample and up to three
+repair rounds, and we call it \emph{large} when we take three samples and up to nine repair rounds,
+which is at most 27 attempts per task.
+
+%% ============================================================
+\section{Results}\label{sec:results}
+
+\subsection{RQ1: How Accurate Are Current Models?}\label{sec:rq1}
+
+We first fix the small budget and run every model on all 100 tasks of KernelBench Level~1.
+Table~\ref{tab:rq1} reports the result; runs that covered only a subset of the tasks are excluded.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\caption{Accuracy on all 100 tasks of KernelBench Level~1 under the small budget.
+Every row uses the same harness and the same task set. The AutoTriton row is the mean and
+standard deviation over four independent runs; every other row is a single run.}
+\label{tab:rq1}
+\begin{tabular}{@{}llr@{}}
+\toprule
+\headrow{Model} & \headrow{Type} & \headrow{Fast-0} \\
+\midrule
+gpt-4o-mini            & commercial          & 15\% \\
+gpt-4o                 & commercial          & 19\% \\
+Qwen3-Coder-30B        & open, 30B           & 27\% \\
+gpt-5.4-nano           & commercial          & 35\% \\
+gpt-5.5                & commercial          & 37\% \\
+gemini-3.1-pro-preview & commercial          & 43\% \\
+claude-opus-4-7        & commercial flagship & 46\% \\
+\midrule
+AutoTriton-8B          & open, 8B, RL        & 44\% $\pm$ 4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The effect of model generation is clear. Accuracy grows from 19 percent for gpt-4o to between 43
+and 46 percent for the newest flagship models. The last row is the more interesting one. A free
+open model with only 8B parameters, trained specifically for Triton, reaches the level of the best
+commercial flagship. We repeated this run four times with the same harness and budget and
+obtained 0.47, 0.44, 0.39, and 0.47, so one run of this benchmark carries a standard deviation of
+about four points. Differences of that size, such as the two points between the 8B model and the
+best flagship, are ties; the gaps between model generations are an order of magnitude larger. The
+four runs solved 59 distinct tasks but only 25 in common (see Finding~4). We also observe that gpt-5.5 and claude-opus-4-7 solve exactly the same
+37 tasks among the first 44 and only separate on the last part of the benchmark, and
+gemini-3.1-pro-preview shows the same late recovery, so this looks like a property of the flagship
+generation rather than of one model.
+
+\finding{1}{Recent commercial flagship models converge to nearly the same behavior below a certain
+difficulty, and a free 8B Triton-specific open model reaches that same level. For kernel
+generation, domain specialization beats model size.}
+
+These absolute numbers, between 15 and 46 percent, are far below the perfect scores in the
+literature. The next two subsections show that most of this gap comes from axes other than model
+ability.
+
+\subsection{RQ2: How Much Does the Setup Decide?}\label{sec:rq2}
+
+While auditing our own pipeline we found a series of defects that lower accuracy without any
+relation to model ability. Table~\ref{tab:rq2} lists them together with the recovery after the fix.
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{7pt}
+\caption{Defects in the measurement setup and the recovery after the fix. In every row the model
+stays the same and only the environment changes.}
+\label{tab:rq2}
+\begin{tabular}{@{}p{0.20\textwidth}p{0.30\textwidth}p{0.28\textwidth}l@{}}
+\toprule
+\headrow{Defect} & \headrow{Symptom} & \headrow{Fix} & \headrow{Accuracy} \\
+\midrule
+GPU memory contention & serving holds 90\% of the GPU, so large inputs fail with out of memory
+  & lower the serving share and free tensors per trial & 0.45 to 0.75 \\
+\addlinespace[2pt]
+No input dtype contract & the model assumes fp16 while the reference is fp32
+  & state the dtype contract in the prompt & \multirow{2}{*}{0.65 to 1.00} \\
+\addlinespace[2pt]
+No gating, no context reset & a polluted context blocks every repair round
+  & gate on correctness and restart from a clean context & \\
+\addlinespace[2pt]
+Framework token cap & the reasoning trace is cut before the code block
+  & raise the response token limit & 0.37 to 0.78 \\
+\addlinespace[2pt]
+Artifact generation cap & the served limit clamps the client limit
+  & fix the generation config of the artifact & truncation gone \\
+\addlinespace[2pt]
+Serving context length & the repair prompt overflows and every round is lost
+  & enlarge the serving context & failure gone \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The first row is the clearest case. When the serving process holds about 90 percent of the GPU,
+the scorer runs out of memory on tasks with large inputs. One Level~1 task on ReLU has a single
+input tensor of 6.4GB. As a result the harness recorded a failure even for ReLU, which is
+semantically trivial. Lowering the serving share and freeing tensors after every trial raised
+accuracy from 0.45 to 0.75 with no change to the model. The other rows have the same character.
+The harness counts them as tasks that the model failed to solve, but in fact the code was cut
+before it arrived, or the scorer broke down on its own.
+
+Three of these are hidden variables. The response token cap of the framework, the generation cap
+inside the released model artifact, and the serving context length never appear in any accuracy
+report. A reasoning model spends thousands of tokens on its thinking trace before it writes any
+code, so a common 8K cap turns a solvable task into an empty answer.
+
+\finding{2}{Changing only the evaluation infrastructure and the hidden serving limits, without
+touching the model, moves accuracy by as much as 0.30. Accuracy numbers from different systems are
+therefore not comparable unless these settings are reported.}
+
+Our own code base gives a second example. Two evaluation paths that share model, prompt, and budget
+but differ in thread count, timeout, temperature, and verification inputs read 0.44 $\pm$ 0.04 and
+0.35 $\pm$ 0.05 for the same 8B model (Appendix~\ref{sec:app-variance}).
+
+We also ported the failure-rule memory of earlier work~\citep{du2026adaexplore}, which distills each
+failure into one short rule and reuses it across tasks. The rules that the system collected while
+the memory defect was still active were wrong, for example a rule that said the GPU does not have
+enough memory to run the kernel. These wrong rules had high weight and filled the prompt, and the
+model then failed even on a plain square matrix multiplication. Accuracy recovered after we cleared
+the store. Experience reuse is therefore only an asset when the evaluation environment is already
+healthy, and a shared store spreads the damage across servers.
+
+\subsection{RQ3: What Do the Failures Look Like?}\label{sec:rq3}
+
+We classify each failure as a compilation error, a value mismatch, a CUDA error, or a timeout.
+Table~\ref{tab:rq3} reports the distribution.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Share of each error type among failed tasks on KernelBench Level~1. The timeout column
+counts our own response and evaluation time limits together with unclassified runtime errors such
+as API rate limits. It is not a constraint of the benchmark.}
+\label{tab:rq3}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\headrow{Model} & \headrow{Compile} & \headrow{Value} & \headrow{CUDA} & \headrow{Timeout} \\
+\midrule
+gpt-4o-mini     & 71.8\% & 20.0\% & 2.4\%  & 2.4\%  \\
+gpt-4o          & 45.7\% & 37.0\% & 11.1\% & 0\%    \\
+gpt-5.2         & 6.9\%  & 58.6\% & 1.7\%  & 20.7\% \\
+claude-opus-4-7 & 0\%    & 65\%   & 0\%    & 28\%   \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The dominant error moves in a regular way as the model gets better. Compilation errors fall from
+71.8 percent to 0 percent, while value mismatches rise from 20 percent to 65 percent. Learning the
+syntax of Triton is comparatively easy for a language model, but understanding the numerical
+meaning of a GPU operation stays hard.
+
+This diagnosis has a practical consequence. We ran an A/B test on three models in which we injected
+Nsight Compute hardware counters into the optimization prompt. Accuracy did not improve for any
+model, and the speedup gain was very small. A profiling signal only applies to a kernel that is
+already correct, while the real bottleneck is correctness. Profiling-driven optimization therefore
+only makes sense after correctness is solved.
+
+\finding{3}{As models improve, failures move from syntactic errors to semantic errors. Profiling
+feedback has no effect before correctness is solved, so a correctness-first and profiling-later
+design is required.}
+
+The timeout column needs a separate reading. For the reasoning model gpt-5.2-pro, 100 percent of
+the Level~1 failures were timeouts. The long thinking trace did not fit inside our response time
+limit, so this is an operational constraint of the setup and not a limit of ability.
+
+\subsection{RQ4: What Actually Raises Accuracy?}\label{sec:rq4}
+
+\subsubsection{Depth versus breadth.}
+We ran gpt-4o on Level~1 with 1, 3, 5, and 10 repair rounds. The individual runs solved 19, 21, 19,
+and 22 tasks, so deeper repair alone barely helped. The union of the four runs, however, solved 28
+tasks, which is 27.3 percent above the best single run. Each run therefore solves some tasks that
+the other runs miss. The four identical AutoTriton runs of Section~\ref{sec:rq1} show the same
+effect with no change of budget: their union covers 59 tasks against 47 for the best run. Table~\ref{tab:rq4a} also shows that the error profile shifts with depth. More
+rounds remove compilation errors but leave value mismatches behind, which matches Finding~3.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\caption{Effect of the number of repair rounds for gpt-4o on KernelBench Level~1.}
+\label{tab:rq4a}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\headrow{Rounds} & \headrow{Solved} & \headrow{Compile err.} & \headrow{Value mism.} \\
+\midrule
+1  & 19 & 59.3\% & 24.7\% \\
+3  & 21 & 51.9\% & 39.2\% \\
+5  & 19 & 45.7\% & 37.0\% \\
+10 & 22 & 32.1\% & 53.8\% \\
+\midrule
+Union & \textbf{28} & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The same effect holds across models. In a cascade, gpt-4o alone solved 25 tasks, and adding the next
+generation model raised the total to 61 tasks, which is a factor of 2.44. The union of five models
+reached 51 out of 100 and beat the best single model at 46 out of 100 by 10.9 percent. The gain was
+not uniform. Adding an expensive reasoning model as the last stage added only one task out of 225,
+so its cost was not justified. We also note that one recent flagship model alone, at 46 out of 100,
+already beats the earlier three-model cascade at 43 out of 100, so a better model generation reduces
+the need for a multi-model strategy.
+
+\finding{4}{Breadth beats depth. Given the same budget, several independent attempts are more
+useful than deeper repair of one attempt.}
+
+\subsubsection{Test-time budget.}
+When we change only the budget axis, most of the gap disappears. Table~\ref{tab:rq4b} shows that the
+free 8B model moves from 0.44 under the small budget to 0.95 under the large budget, which is close
+to the perfect scores in the literature.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\caption{Level~1 accuracy when only the budget changes. Small budget is one sample and three rounds.
+Large budget is three samples and nine rounds. The value marked with a dagger is computed over the
+38 tasks that finished inside the time limit. The AT-8B small-budget value is the mean of four runs
+(Section~\ref{sec:rq1}); all other values are single runs.}
+\label{tab:rq4b}
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+\headrow{Budget} & \headrow{Scope} & \headrow{Qwen-30B} & \headrow{AT-8B} & \headrow{opus} \\
+\midrule
+small & all 100     & 0.27 & 0.44 & --- \\
+large & first 20    & 0.75 & \textbf{0.95} & \textbf{1.00} \\
+large & all 100     & ---  & 0.76$^{\dagger}$ & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A larger budget, however, is limited by wall-clock time. In the full run with the large budget, 27
+attempts per task did not fit into a two-hour limit on a slow local server, and 59 percent of the
+tasks did not finish. The real bottleneck of test-time scaling is therefore not the number of
+attempts but the throughput per attempt, which is why papers that report perfect accuracy assume a
+fast commercial API or a large serving cluster.
+
+\subsubsection{Reinforcement learning and budget.}
+We reproduced a released multi-turn reinforcement learning environment and changed only the number
+of effective turns from 1 to 14. Table~\ref{tab:rq4c} compares a model without such training and a
+model with it.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\caption{Fast@1.2 in percent as a function of the number of effective turns. Only the turn count
+changes. DrK-14B is trained with kernel-specific reinforcement learning and Qwen3-30B is not.}
+\label{tab:rq4c}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\headrow{Model and level} & \headrow{1 turn} & \headrow{3 turns} & \headrow{7 turns} & \headrow{14 turns} \\
+\midrule
+Qwen3-30B, L2 & 3.7  & 11.9 & 16.8 & 28.4 \\
+DrK-14B, L2   & 17.4 & 41.3 & 60.6 & \textbf{76.9} \\
+DrK-14B, L1   & 11.5 & 22.0 & 27.0 & 31.2 \\
+DrK-14B, L3   & 3.0  & 8.3  & 13.0 & 20.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Both models improve monotonically with the budget, so budget dominance is a general effect and not a
+property of one model. The trained model, however, raises both the intercept, by a factor of 4.7 at
+one turn, and the gain per turn, by 59.5 points against 24.7 points. The saturation point also depends
+on difficulty. Level~1 saturates around seven turns, while Level~3 has not saturated even at fourteen
+turns and shows the largest relative gain.
+
+\finding{5}{The perfect scores in the literature and our full-benchmark numbers are measurements of
+different budget regimes, not of different model ability. Reinforcement learning and test-time budget
+are complements, and the saturation point depends on task difficulty.}
+
+\subsection{RQ5: What Transfers to Another Setting?}\label{sec:rq5}
+
+\subsubsection{Reusing a failure-rule memory.}
+Beyond the poisoning case in Section~\ref{sec:rq2}, the failure-rule memory is useful when the
+harness is healthy. The system turns each failure into one short rule, for example a rule that says
+the kernel must not call PyTorch operations inside the Triton kernel body, and it keeps these rules
+across tasks. During one full evaluation the store collected between 73 and 80 distinct rules, and
+the rules covered common mistakes such as wrong tile dimensions, a wrong block size along the
+reduction axis, and missing contiguity assumptions. This kind of memory is cheap, since it only
+needs one extra model call per failure, and it is the most portable of all the artifacts that we
+reused. Its risk, however, is asymmetric. A useful rule saves a few attempts, while a wrong rule
+that carries a high weight can block a whole class of tasks, as we saw when accuracy collapsed on
+tasks as simple as a square matrix multiplication.
+
+\subsubsection{Reproducing a released training environment.}
+We first downloaded the official code and the released weights of a kernel-specific reinforcement
+learning study and checked whether the reported numbers reproduce. On the 100 tasks of Level~2 we
+measured Fast@1.2 at 24.3 percent against 25.6 percent in the paper, and our Fast@1.5 and Fast@2
+were even higher. The reported result is therefore real. Reproduction, however, needed an
+eight-GPU node. On a single GPU the trainer and the serving engine did not fit together, so
+reproducibility does not imply accessibility.
+
+\subsubsection{Cross-hardware and cross-benchmark results.}
+Table~\ref{tab:rq5} reports two open models on two GPUs across all levels. The advantage of the
+8B Triton-specific model is consistent, and the difficulty cliff at Level~2 and Level~3 is sharp.
+Accuracy falls from 0.44 on single operations to 0.10 on fused operations and to 0.06 on whole
+models. On the real serving kernels of FlashInfer-Bench only one combination reaches 0.25 while
+the others stay at zero, which points to differences in Triton version and compute architecture.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Open models on two GPUs across all levels under the small budget. PRO~6000 is the RTX PRO
+6000 and AT-8B is the Triton-specific model. On the H100 the 30B model leaves too little memory for
+the scorer, so the value marked with a dagger is depressed by out-of-memory failures. See Finding~2.
+The AT-8B value at Level~1 on the PRO 6000 is the mean of four runs; all other values are single runs.}
+\label{tab:rq5}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\multirow{2}{*}{\headrow{Level}} & \multicolumn{2}{c}{\headrow{Qwen-30B}} & \multicolumn{2}{c}{\headrow{AT-8B}} \\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+ & PRO 6000 & H100 & PRO 6000 & H100 \\
+\midrule
+L1, 100 tasks    & 0.27 & 0.12$^{\dagger}$ & \textbf{0.44} & 0.43 \\
+L2, 100 tasks    & 0.05 & 0.06 & \textbf{0.10} & 0.08 \\
+L3, 50 tasks     & 0.04 & 0.06 & \textbf{0.06} & 0.02 \\
+FlashInfer, 8    & 0.00 & 0.00 & 0.00 & \textbf{0.25} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Accuracy itself is almost independent of the GPU as long as memory is sufficient. Under the same
+large budget on the first 20 tasks, the 30B open model reached 0.75 on the RTX PRO 6000 and 0.60 on
+the H100, and the whole difference came from memory. The H100 has 80GB, so after serving the 30B
+model the scorer only had about 43GB, while the RTX PRO 6000 with 96GB left about 52GB. After we
+correct for the out-of-memory failures the H100 number rises to about 0.70. A third GPU, the A6000
+with 48GB, gave a similar profile across levels, with 0.37 on Level~1, 0.12 on Level~2, and 0.04 on
+Level~3, which supports the same conclusion.
+
+Speedup behaves in the opposite way. On a square matrix multiplication we measured 1.61 times on the
+RTX PRO 6000 and 0.83 times on the H100, because the cuBLAS baseline of the H100 is very strong. A
+speedup number is therefore only comparable inside one hardware setting. The quality of the
+optimization also improves with model generation. Among correct kernels, the share that reaches at
+least a two times speedup grows from 6.3 percent for gpt-4o-mini and 16.0 percent for gpt-4o to 28.6
+percent for gpt-5.4-nano and 30.4 percent for claude-opus-4-7. The largest single speedup that we
+observed was 84.03 times on one Level~3 task.
+
+\subsubsection{Agent structure against model ability.}
+We downloaded an open deep-agent framework that reports perfect accuracy and ran it with our own
+open models. With Qwen-30B it solved 15 of the first 20 tasks, which is exactly the same score that
+our own pipeline reaches under the large budget, and even the set of failed tasks was identical.
+The wall-clock time, however, dropped from several hours to about one hour. With a stronger open
+model, namely GLM-5.2 in 4-bit form, the same framework solved all 20 tasks and matched the
+commercial flagship.
+
+\finding{6}{An agent framework improves search efficiency but does not raise the ceiling of the
+base model. Accuracy is a product of framework efficiency and model ability, and a strong open
+model with an open framework can reach a perfect score without any commercial model.}
+
+Extending this combination to all of Level~1 gave 0.48 over the 77 tasks that we ran. Successes
+concentrated on matrix multiplication, reduction, and element-wise tasks, while convolution and
+sequential scan tasks dropped sharply. To separate budget from ability we removed truncation
+completely, with a 32K serving context and a response limit of 24000 tokens, and retried three
+representative convolution tasks. Truncation disappeared, yet all three still failed to converge.
+The remaining convolution failures are therefore a limit of model ability on indexing large tensors,
+not a limit of the token budget.
+
+\subsubsection{Model size against weight precision.}
+We loaded a very large open reasoning model, GLM-5.2, on an eight-GPU node with layer splitting. In
+2-bit form it reached only 0.10 on Level~1 and solved nothing at all on Level~2, Level~3, and the
+serving kernels, after 21.5 hours of compute. A general reasoning model with two orders of magnitude
+more parameters therefore stayed below half of the 8B specialized model in Table~\ref{tab:rq5}. To
+confirm that quantization was the cause, we reloaded the same model in 4-bit form. Accuracy recovered
+to 0.96 over the tasks that finished inside the time limit, which is the best result among our open
+models. This version, however, generated only about 8 tokens per second, so 76 percent of the tasks
+exceeded the limit. The bottleneck simply moved from precision to throughput.
+
+\finding{7}{Quantization loss grows with task complexity. Low precision destroys quality and full
+precision on a very large model destroys throughput, so a mid-size model at full precision is the
+practical choice under a fixed budget.}
+
+\subsubsection{The boundary of budget.}
+All results above hold inside the training distribution. To find the boundary we moved a
+kernel-specific reinforcement learning model into a standardized agent environment and compared a
+single attempt against a test-time scaling agent. On the 139 standard tasks Pass@1 rose from 12.2
+percent to 18.0 percent, and the performance of the passing kernels relative to the oracle rose
+from 0.143 to 0.285. On the 13 out-of-distribution tasks, however, Pass@1 stayed at 7.7 percent and
+did not move at all. On a new domain-specific language the same model solved none of the three tasks
+that our environment could run. Appendix~\ref{sec:app-npu} repeats the test on two NPU targets. The same pattern appears across benchmarks. On the Triton-specific
+benchmark the advantage of the specialized model disappears and all four combinations converge into
+a narrow band between 0.15 and 0.19.
+
+To separate the cause we ran a two-by-two ablation over the prompt format and the budget. Changing
+only the prompt format had almost no effect, and execution accuracy even fell from 0.151 to 0.127.
+Turning on the budget, in contrast, raised execution accuracy by about 2.3 times and call accuracy
+by about 2.5 times. The gap against the original paper is therefore explained by single-attempt
+evaluation against repeated repair, and not by a mismatch with the training prompt. This repeats
+what we found on KernelBench, so budget dominance is a general effect and not a property of one
+benchmark.
+
+\finding{8}{A larger test-time budget only improves accuracy and performance inside the
+distribution. It does not rescue the collapse outside the distribution. The benefit of
+reinforcement learning is also tied to its own training harness and transfers only in part.}
+
+%% ============================================================
+\section{Conclusion}\label{sec:conclusion}
+
+This paper audits the current state of LLM-based Triton kernel generation with five research
+questions instead of proposing a new system. We measured 8 commercial models
+and 4 open models on three GPUs and on four benchmarks with one fixed harness, and we ran released
+artifacts of earlier work in our own setting. The reported accuracy of a system is not a function
+of model ability alone. It is a function of ability, of test-time budget, and of the measurement
+setup. Removing infrastructure defects, giving a sufficient budget, and using a specialized open
+model is enough to reach the level of the best reported results without any commercial model.
+This recipe, however, only works inside the training distribution, and no budget helps outside it.
+We therefore ask that future work report six axes next to any accuracy number: the attempt budget,
+the verification strength, the memory headroom of the scorer, the serving context length, the
+response token caps of both the framework and the model artifact, and the evaluation distribution.
+
+%% ============================================================
+%% ARR requires a section titled exactly "Limitations" after the conclusion.
+%% It does not count toward the page limit.
+\section*{Limitations}
+
+Only one configuration, the 8B open model under the small budget on Level~1, was run more than
+once. Its run-to-run standard deviation is about four points (Section~\ref{sec:rq1}), and every
+other number in this paper comes from a single run, so differences of a few points between the rows
+of a table should not be read as a ranking. The absolute values are also tied to the harness
+settings that we list, as the two evaluation paths of Section~\ref{sec:rq2} show.
+The two NPU experiments in Appendix~\ref{sec:app-npu} cover five operators and three kernels
+respectively, and the second of them was run with one open model only, so they are evidence of a
+pattern and not a benchmark.
+Some of our large-budget measurements ran on the first 20 tasks of Level~1 rather than on all 100
+tasks, and the full run left unfinished tasks because of the wall-clock limit. Commercial models sit
+behind an API, so we cannot control their serving conditions, and an uncontrolled infrastructure
+difference remains in every comparison between commercial and open models. The out-of-distribution
+set has only 13 tasks, so it shows that a boundary exists but does not measure its size precisely.
+Finally, our timeout column mixes true time limits with unclassified runtime errors, so it should be
+read as an operational category rather than as a single failure cause.
+
+\section*{Ethical Considerations}
+
+This study does not involve human subjects, personal data, or annotators. All benchmarks and
+model artifacts that we reuse are publicly released by their authors for research use, and we cite
+each of them. The KernelBench code, TritonGym, AdaExplore, and the GLM-5.2 weights are released under
+the MIT license; TritonBench, FlashInfer-Bench, the Qwen3-Coder weights, and the AutoTriton weights
+under Apache-2.0; the Dr.\,Kernel training code states Apache-2.0 in its documentation. The
+KernelBench task data and the Dr.\,Kernel weights carry no explicit license, and we use them only for
+evaluation as their authors intend. The two NPU software stacks of Appendix~\ref{sec:app-npu} are vendor SDKs used under their own
+terms on hardware available to us. We do not redistribute any weights or data, and we release no new
+artifact with this submission. The main risk of the work is misuse of generated kernels in production without
+verification, which we address by making verification strength one of the six reporting axes.
+We report the
+wall-clock cost of each experiment in Appendix~\ref{sec:app-budget} so that the compute can be
+weighed against the findings.
+
+\bibliography{egbib}
+
+\appendix
+\input{appendix}
+
+\end{document}

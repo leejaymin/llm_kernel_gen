@@ -1,0 +1,51 @@
+% Figure 1: study structure. Plain block layout. No color, no dashed lines, few arrows.
+\begin{figure*}[t]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\sffamily,
+  cell/.style={rectangle, draw=black, minimum height=1.15cm, minimum width=4.0cm,
+               align=center, inner sep=4pt},
+  band/.style={rectangle, draw=black, thick, minimum height=1.15cm, minimum width=16.6cm,
+               align=center, inner sep=4pt},
+  arr/.style={-{Stealth[length=6pt]}, thick},
+]
+
+% Row 1: the four axes that we vary
+\node[cell] (a1) at (0,0)     {\textbf{Models}\\{\small 8 commercial, 4 open}};
+\node[cell] (a2) at (4.2,0)   {\textbf{Hardware}\\{\small RTX PRO 6000, H100, A6000}};
+\node[cell] (a3) at (8.4,0)   {\textbf{Benchmarks}\\{\small 4 suites, 424 tasks}};
+\node[cell] (a4) at (12.6,0)  {\textbf{Budget}\\{\small samples, rounds, turns}};
+
+% Row 2: the harness that stays fixed
+\node[band] (harness) at (6.3,-2.15)
+  {\textbf{One fixed evaluation harness}\\[2pt]
+   {\small build prompt \ \textbar\ \ generate \ \textbar\ \ parse code \ \textbar\ \
+    \textbf{score in an isolated subprocess} \ \textbar\ \ classify error \ \textbar\ \ repair and retry}};
+
+% Row 3: what we read out
+\node[band] (out) at (6.3,-4.15)
+  {\textbf{What we measure}\\[2pt]
+   {\small correctness, Fast-0 and Pass@1 \ \textbar\ \ speedup, Fast-1 and Fast-2 \ \textbar\ \
+    error types \ \textbar\ \ wall-clock and completion rate}};
+
+% Row 4: research questions
+\node[band] (rq) at (6.3,-6.15)
+  {\textbf{Research questions}\\[2pt]
+   {\small RQ1 how accurate \ \textbar\ \ RQ2 how much the setup decides \ \textbar\ \
+    RQ3 how failures look \ \textbar\ \ RQ4 what raises accuracy \ \textbar\ \ RQ5 what transfers}};
+
+% Three arrows only
+\draw[arr] (6.3,-0.62) -- (harness.north);
+\draw[arr] (harness.south) -- (out.north);
+\draw[arr] (out.south) -- (rq.north);
+
+\end{tikzpicture}%
+}
+\caption{Structure of the study. We keep one evaluation harness fixed and change four axes on top of it.
+The harness scores every kernel in an isolated subprocess. This is required, not optional, because one
+bad kernel can corrupt the CUDA context, and then every later evaluation in the same process fails.
+We do not propose a new generation system. We hold the harness constant and change one axis at a time,
+so that we can tell apart the effect of the model, the hardware, the benchmark, and the compute budget.}
+\label{fig:overview}
+\end{figure*}

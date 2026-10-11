@@ -1,0 +1,342 @@
+\begin{thebibliography}{42}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Ansel et~al.(2024)Ansel, Yang, He, Gimelshein, Jain, Voznesensky,
+  Bao, Bell, Berard, Burber et~al.}]{ansel2024pytorch2}
+Jason Ansel, Edward Yang, Horace He, Natalia Gimelshein, Animesh Jain, Michael
+  Voznesensky, Bin Bao, Peter Bell, David Berard, Evgeni Burber, et~al. 2024.
+\newblock Pytorch 2: Faster machine learning through dynamic python bytecode
+  transformation and graph compilation.
+\newblock In \emph{ASPLOS}.
+
+\bibitem[{Baronio et~al.(2025)Baronio, Marsella, Pan, Guo, and
+  Alberti}]{baronio2025kevin}
+Carlo Baronio, Pietro Marsella, Ben Pan, Simon Guo, and Silas Alberti. 2025.
+\newblock \href {https://arxiv.org/abs/2507.11948} {Kevin: Multi-turn rl for
+  generating cuda kernels}.
+\newblock \emph{Preprint}, arXiv:2507.11948.
+
+\bibitem[{Cheng et~al.(2026)Cheng, Lu, Liao, Li, Zhang
+  et~al.}]{cheng2026musacoder}
+Kun Cheng, Songshuo Lu, Sicong Liao, Tankun Li, Yafei Zhang, et~al. 2026.
+\newblock \href {https://arxiv.org/abs/2606.04847} {{MusaCoder}: Native {GPU}
+  kernel generation with full-stack training on {Moore Threads} {GPU}s}.
+\newblock \emph{Preprint}, arXiv:2606.04847.
+
+\bibitem[{Crupi et~al.(2026)Crupi, Tufano, and Bavota}]{crupi2026slmjudge}
+Giuseppe Crupi, Rosalia Tufano, and Gabriele Bavota. 2026.
+\newblock Improving code generation via small language model-as-a-judge.
+\newblock In \emph{Proceedings of the IEEE/ACM 48th International Conference on
+  Software Engineering (ICSE)}.
+
+\bibitem[{Dai et~al.(2026)Dai, Wu, Yu, Gao et~al.}]{dai2026cudaagent}
+Weinan Dai, Hanlin Wu, Qiying Yu, Huan-ang Gao, et~al. 2026.
+\newblock \href {https://arxiv.org/abs/2602.24286} {{CUDA} {Agent}: Large-scale
+  agentic reinforcement learning for high-performance {CUDA} kernel
+  generation}.
+\newblock \emph{Preprint}, arXiv:2602.24286.
+
+\bibitem[{Dong et~al.(2025)Dong, Yang, Liu, Wang, Qi, Tarokh, Rangadurai, and
+  Yang}]{stark2026}
+Juncheng Dong, Yang Yang, Tao Liu, Yang Wang, Feng Qi, Vahid Tarokh, Kaushik
+  Rangadurai, and Shuang Yang. 2025.
+\newblock \href {https://arxiv.org/abs/2510.16996} {Stark: Strategic team of
+  agents for refining kernels}.
+\newblock \emph{Preprint}, arXiv:2510.16996.
+
+\bibitem[{Du et~al.(2026)Du, Zhuo, Dong, He, Sun, Zheng, Karunaratne, Fox,
+  Dettmers, Chen, Yang, and Welleck}]{du2026adaexplore}
+Weihua Du, Jingming Zhuo, Yixin Dong, Andre~Wang He, Weiwei Sun, Zeyu Zheng,
+  Manupa Karunaratne, Ivan Fox, Tim Dettmers, Tianqi Chen, Yiming Yang, and
+  Sean Welleck. 2026.
+\newblock \href {https://arxiv.org/abs/2604.16625} {Adaexplore: Failure-driven
+  adaptation and diversity-preserving search for efficient kernel generation}.
+\newblock \emph{Preprint}, arXiv:2604.16625.
+
+\bibitem[{{FlashInfer Team}(2025)}]{flashinferbench2025}
+{FlashInfer Team}. 2025.
+\newblock {FlashInfer-Bench}: Building the virtuous cycle for {AI}-driven {LLM}
+  systems.
+\newblock \url{https://github.com/flashinfer-ai/flashinfer-bench}.
+\newblock Benchmark suite of production LLM serving kernels; blogpost at
+  \url{https://flashinfer.ai/2025/10/21/flashinfer-bench.html}.
+
+\bibitem[{Gong et~al.(2025)Gong, Voskanyan, Brookes, Wu, Jie, Xu, Giavrimis,
+  Basios, Kanthan, and Wang}]{gong2025codeopt_survey}
+Jingzhi Gong, Vardan Voskanyan, Paul Brookes, Fan Wu, Wei Jie, Jie Xu, Rafail
+  Giavrimis, Mike Basios, Leslie Kanthan, and Zheng Wang. 2025.
+\newblock \href {https://arxiv.org/abs/2501.01277} {Language models for code
+  optimization: Survey, challenges and future directions}.
+\newblock \emph{Preprint}, arXiv:2501.01277.
+
+\bibitem[{Guan et~al.(2026)Guan, Lin, Zhao, Yao, Qiang, Yu, Viswanath, Ding,
+  and Aziz}]{tritongym2026}
+Yue Guan, Yichen Lin, Xu~Zhao, Jianzhu Yao, Xinwei Qiang, Zhongkai Yu, Pramod
+  Viswanath, Yufei Ding, and Adnan Aziz. 2026.
+\newblock {TritonGym}: A benchmark for agentic {LLM} workflows in {Triton}
+  {GPU} code generation.
+\newblock In \emph{Proceedings of the 43rd International Conference on Machine
+  Learning (ICML)}.
+\newblock Code and leaderboard: \url{https://github.com/yil384/TritonGym}.
+
+\bibitem[{Guo et~al.(2026)Guo, Lin, and Yang}]{drtriton2025}
+Siqi Guo, Ming Lin, and Tianbao Yang. 2026.
+\newblock \href {https://arxiv.org/abs/2603.21465} {Drtriton: Large-scale
+  synthetic data driven reinforcement learning for triton kernel generation}.
+\newblock \emph{Preprint}, arXiv:2603.21465.
+
+\bibitem[{Han et~al.(2026)Han, Fan, Jiang, Xu, Xie, Zhang, Zhu, and
+  Zhang}]{egg2026}
+Yaochen Han, Ke~Fan, Hongxu Jiang, Wanqi Xu, Weiyu Xie, Runhua Zhang, Chenhui
+  Zhu, and Yixiang Zhang. 2026.
+\newblock \href {https://arxiv.org/abs/2606.26758} {{EGG}: An expert-guided
+  agent framework for kernel generation}.
+\newblock \emph{Preprint}, arXiv:2606.26758.
+
+\bibitem[{Hari et~al.(2026)Hari, Balaji, Damani, Huang, and
+  Kozyrakis}]{hari2026ucutlass}
+Siva Kumar~Sastry Hari, Vignesh Balaji, Sana Damani, Qijing Huang, and Christos
+  Kozyrakis. 2026.
+\newblock \href {https://arxiv.org/abs/2603.29010} {Improving efficiency of
+  {GPU} kernel optimization agents using a domain-specific language and
+  speed-of-light guidance}.
+\newblock \emph{Preprint}, arXiv:2603.29010.
+
+\bibitem[{Huang et~al.(2026)Huang, Chen, Huang, Yin, Li, Zhen, Yuan, and
+  Shao}]{huang2026kernelfoundry}
+Zixuan Huang, Da~Chen, Kecheng Huang, Lihao Yin, Xing Li, Huiling Zhen,
+  Mingxuan Yuan, and Zili Shao. 2026.
+\newblock \href {https://arxiv.org/abs/2605.30359} {{Kernel Foundry}: A
+  diagnosis-driven evolutionary kernel optimizer with multi-experts}.
+\newblock \emph{Preprint}, arXiv:2605.30359.
+
+\bibitem[{Hui et~al.(2024)Hui, Yang, Cui, Yang, Liu, Zhang, Liu, Zhang, Yu,
+  Dang et~al.}]{hui2024qwencoder}
+Binyuan Hui, Jian Yang, Zeyu Cui, Jiaxi Yang, Dayiheng Liu, Lei Zhang, Tianyu
+  Liu, Jiajun Zhang, Bowen Yu, Kai Dang, et~al. 2024.
+\newblock Qwen2.5-coder technical report.
+\newblock \emph{arXiv preprint arXiv:2409.12186}.
+
+\bibitem[{Jaber and Jaber(2026)}]{jaber2026automegakernel}
+Jaber Jaber and Osama Jaber. 2026.
+\newblock \href {https://arxiv.org/abs/2606.09682} {{AutoMegaKernel}: A
+  statically-checked agent harness for self-retargeting megakernel synthesis}.
+\newblock \emph{Preprint}, arXiv:2606.09682.
+
+\bibitem[{Kirk and Hwu(2016)}]{kirk2016programming}
+David~B. Kirk and Wen-mei~W. Hwu. 2016.
+\newblock \emph{Programming Massively Parallel Processors: A Hands-on
+  Approach}, 3rd edition.
+\newblock Morgan Kaufmann.
+
+\bibitem[{Kwon et~al.(2026)Kwon, Shin, Lee, Youm, Song, Kim, Jung, Lee, and
+  Kim}]{kwon2026cove}
+Hyunho Kwon, Sanggyu Shin, Ju~Min Lee, Hoyun Youm, Seungbin Song, Seongho Kim,
+  Hanwoong Jung, Seungwon Lee, and Hanjun Kim. 2026.
+\newblock Compiler-runtime co-operative chain of verification for {LLM}-based
+  code optimization.
+\newblock In \emph{Proceedings of the 2026 IEEE/ACM International Symposium on
+  Code Generation and Optimization (CGO)}.
+
+\bibitem[{Lange et~al.(2025)Lange, Prasad, Sun, Faldor, Tang, and
+  Ha}]{lange2025aicudaengineer}
+Robert~Tjarko Lange, Aaditya Prasad, Qi~Sun, Maxence Faldor, Yujin Tang, and
+  David Ha. 2025.
+\newblock \href {https://pub.sakana.ai/ai-cuda-engineer/paper/} {The {AI}
+  {CUDA} engineer: Agentic {CUDA} kernel discovery, optimization and
+  composition}.
+\newblock Technical report, Sakana AI.
+
+\bibitem[{Lei et~al.(2025)Lei, Yang, Zhang, You, Zhang, Luan, Liu, and
+  Qian}]{lei2025pragma}
+Kelun Lei, Hailong Yang, Huaitao Zhang, Xin You, Kaige Zhang, Zhongzhi Luan,
+  Yi~Liu, and Depei Qian. 2025.
+\newblock \href {https://arxiv.org/abs/2511.06345} {Pragma: A
+  profiling-reasoned multi-agent framework for automatic kernel optimization}.
+\newblock \emph{Preprint}, arXiv:2511.06345.
+
+\bibitem[{Li et~al.(2025{\natexlab{a}})Li, Li, Gao, Shi, Li, Wang, Huang, Wang,
+  Wang, Han, Liu, and Sun}]{li2025tritonbench}
+Jianling Li, Shangzhan Li, Zhenye Gao, Qi~Shi, Yuxuan Li, Zefan Wang, Jiacheng
+  Huang, Haojie Wang, Jianrong Wang, Xu~Han, Zhiyuan Liu, and Maosong Sun.
+  2025{\natexlab{a}}.
+\newblock \href {https://arxiv.org/abs/2502.14752} {Tritonbench: Benchmarking
+  large language model capabilities for generating triton operators}.
+\newblock In \emph{Findings of the Association for Computational Linguistics
+  (ACL)}.
+
+\bibitem[{Li et~al.(2025{\natexlab{b}})Li, Wang, He, Li, Shi, Li, Hu, Che, Han,
+  Liu, and Sun}]{li2025autotriton}
+Shangzhan Li, Zefan Wang, Ye~He, Yuxuan Li, Qi~Shi, Jianling Li, Yonggang Hu,
+  Wanxiang Che, Xu~Han, Zhiyuan Liu, and Maosong Sun. 2025{\natexlab{b}}.
+\newblock \href {https://arxiv.org/abs/2507.05687} {{AutoTriton}: Automatic
+  triton programming with reinforcement learning in {LLM}s}.
+\newblock \emph{arXiv preprint arXiv:2507.05687}.
+
+\bibitem[{Li et~al.(2025{\natexlab{c}})Li, Wang, Wang, Li, and
+  Shum}]{cudal1_2026}
+Xiaoya Li, Albert Wang, Guoyin Wang, Jiwei Li, and Chris Shum.
+  2025{\natexlab{c}}.
+\newblock \href {https://arxiv.org/abs/2507.14111} {Cuda-l1: Improving cuda
+  optimization via contrastive reinforcement learning}.
+\newblock \emph{Preprint}, arXiv:2507.14111.
+
+\bibitem[{Li et~al.(2026)Li, Weng, Zhu, and Hou}]{li2026agentcompile}
+Xuanzhe Li, Ziyan Weng, Zhiyu Zhu, and Junhui Hou. 2026.
+\newblock \href {https://arxiv.org/abs/2606.07665} {{AgentCompile}: An
+  {LLM}-guided compiler for direct {CUDA} inference}.
+\newblock \emph{Preprint}, arXiv:2606.07665.
+
+\bibitem[{Liao et~al.(2025)Liao, Wu, Liu et~al.}]{liao2026kernelevolve}
+Gang Liao, Carole-Jean Wu, Gaoxiang Liu, et~al. 2025.
+\newblock \href {https://arxiv.org/abs/2512.23236} {Kernelevolve: Scaling
+  agentic kernel coding for heterogeneous ai accelerators at meta}.
+\newblock \emph{Preprint}, arXiv:2512.23236.
+
+\bibitem[{Liu et~al.(2026)Liu, Xu, Li, Zheng, Li, Liu, and He}]{drkernel2026}
+Wei Liu, Jiawei Xu, Yingru Li, Longtao Zheng, Tianjian Li, Qian Liu, and
+  Junxian He. 2026.
+\newblock {Dr. Kernel}: Reinforcement learning done right for {Triton} kernel
+  generations.
+\newblock In \emph{Proceedings of the 43rd International Conference on Machine
+  Learning (ICML)}.
+\newblock KernelGYM environment and code available at
+  \url{https://github.com/hkust-nlp/KernelGYM}.
+
+\bibitem[{Ouyang et~al.(2025)Ouyang, Guo, Arora, Zhang, Hu, R{\'e}, and
+  Mirhoseini}]{ouyang2024kernelbench}
+Anne Ouyang, Simon Guo, Simran Arora, Alex~L. Zhang, William Hu, Christopher
+  R{\'e}, and Azalia Mirhoseini. 2025.
+\newblock {KernelBench}: Can {LLMs} write efficient {GPU} kernels?
+\newblock In \emph{Proceedings of the 42nd International Conference on Machine
+  Learning (ICML)}.
+\newblock ArXiv:2502.10517.
+
+\bibitem[{Ran et~al.(2026)Ran, Xie, Ji, Liu, Wu, Cao, Guo, Yu, Li, Hu, Yang,
+  and Xie}]{kernelband2026}
+Dezhi Ran, Shuxiao Xie, Mingfang Ji, Anmin Liu, Mengzhou Wu, Yuan Cao, Yuzhe
+  Guo, Hao Yu, Linyi Li, Yitao Hu, Wei Yang, and Tao Xie. 2026.
+\newblock {KernelBand}: Steering {LLM}-based kernel optimization via
+  hardware-aware multi-armed bandits.
+\newblock In \emph{Proceedings of the 43rd International Conference on Machine
+  Learning (ICML)}.
+\newblock Code available at \url{https://github.com/TongmingLAIC/KernelBand}.
+
+\bibitem[{Saba et~al.(2026)Saba, Chen, Li, Ouyang, Si, and
+  Long}]{saba2026cutegen}
+Tara Saba, Zhiyang Chen, Jikai~Jason Li, Anne Ouyang, Xujie Si, and Fan Long.
+  2026.
+\newblock \href {https://arxiv.org/abs/2604.01489} {Cutegen: An llm-based
+  agentic framework for generation and optimization of high-performance gpu
+  kernels using cute}.
+\newblock \emph{Preprint}, arXiv:2604.01489.
+
+\bibitem[{Sereda et~al.(2026)Sereda, Bartan, Nayak, St.~John, Serrino, and
+  Asgar}]{sereda2026kforge}
+Taras Sereda, Burak Bartan, Ankita Nayak, Tom St.~John, Natalie Serrino, and
+  Zain Asgar. 2026.
+\newblock \href {https://arxiv.org/abs/2606.02963} {{KForge}: {LLM}-driven
+  cross-platform kernel generation for {AI} accelerators}.
+\newblock In \emph{Machine Learning for Architecture and Systems Workshop
+  (MLArchSys), co-located with ISCA}.
+
+\bibitem[{Tang et~al.(2026)Tang, Priebe, Qin, and Esmaeilzadeh}]{tang2026colt}
+Annabelle~Sujun Tang, Christopher Priebe, Lianhui Qin, and Hadi Esmaeilzadeh.
+  2026.
+\newblock \href {https://arxiv.org/abs/2602.01935} {{COLT}: Lightweight
+  multi-{LLM} collaboration through shared {MCTS} reasoning for model
+  compilation}.
+\newblock \emph{Preprint}, arXiv:2602.01935.
+
+\bibitem[{Tehrani et~al.(2026)Tehrani, Emara, Wissam, Paluch, Atallah, Dudziak,
+  and Abdelfattah}]{tehrani2026gpt5kernel}
+Ali Tehrani, Yahya Emara, Essam Wissam, Wojciech Paluch, Waleed Atallah,
+  {\L}ukasz Dudziak, and Mohamed~S. Abdelfattah. 2026.
+\newblock \href {https://arxiv.org/abs/2602.11000} {Fine-tuning gpt-5 for gpu
+  kernel generation}.
+\newblock \emph{Preprint}, arXiv:2602.11000.
+
+\bibitem[{Tillet et~al.(2019)Tillet, Kung, and Cox}]{tillet2019triton}
+Philippe Tillet, H.~T. Kung, and David Cox. 2019.
+\newblock Triton: An intermediate language and compiler for tiled neural
+  network computations.
+\newblock \emph{Proceedings of the 3rd ACM SIGPLAN International Workshop on
+  Machine Learning and Programming Languages}, pages 10--19.
+
+\bibitem[{Tschand et~al.(2025)Tschand, Awad, Swann, Ramakrishnan, Ma, Lowery,
+  Dasika, and Reddi}]{swizzleperf2025}
+Arya Tschand, Muhammad Awad, Ryan Swann, Kesavan Ramakrishnan, Jeffrey Ma,
+  Keith Lowery, Ganesh Dasika, and Vijay~Janapa Reddi. 2025.
+\newblock \href {https://arxiv.org/abs/2508.20258} {{SwizzlePerf}:
+  Hardware-aware {LLMs} for {GPU} kernel performance optimization}.
+\newblock \emph{Preprint}, arXiv:2508.20258.
+
+\bibitem[{Wang et~al.(2025)Wang, Joshi, Majumder, Chao, Ding, Liu, Brahma, Li,
+  Liu, and Barsoum}]{wang2025geak}
+Jianghui Wang, Vinay Joshi, Saptarshi Majumder, Xu~Chao, Bin Ding, Ziqiong Liu,
+  Pratik~Prabhanjan Brahma, Dong Li, Zicheng Liu, and Emad Barsoum. 2025.
+\newblock \href {https://arxiv.org/abs/2507.23194} {Geak: Introducing triton
+  kernel ai agent \& evaluation benchmarks}.
+\newblock \emph{Preprint}, arXiv:2507.23194.
+
+\bibitem[{Woo et~al.(2025)Woo, Zhu, Nie, Jia, Wang, and Park}]{woo2025tritonrl}
+Jiin Woo, Shaowei Zhu, Allen Nie, Zhen Jia, Yida Wang, and Youngsuk Park. 2025.
+\newblock \href {https://arxiv.org/abs/2510.17891} {{TritonRL}: Training {LLM}s
+  to think and code triton without cheating}.
+\newblock \emph{arXiv preprint arXiv:2510.17891}.
+
+\bibitem[{Xu et~al.(2026)Xu, Zhang, Li, Yu, Zhang, Zhang, Qian, Xia, Zhao,
+  Wang, Feng, Xue, and Cui}]{lego2026}
+Ruiyuan Xu, Shuoming Zhang, Guangli Li, Qiuchu Yu, Rui Zhang, Yangyu Zhang, Hao
+  Qian, Chunwei Xia, Jiacheng Zhao, Chenxi Wang, Xiaobing Feng, Jingling Xue,
+  and Huimin Cui. 2026.
+\newblock {LEGO}: An {LLM}-enabled hierarchical optimizer for tensor
+  computation graphs with structure-aware search and compositional synthesis.
+\newblock In \emph{Proceedings of the 43rd International Conference on Machine
+  Learning (ICML)}.
+\newblock Code available at \url{https://github.com/mmt-at/LEGO}.
+
+\bibitem[{Yu et~al.(2026)Yu, Zang, Tsai, Wu, Shen, Zhang, Wang, Xiao, Shi, Luo,
+  Zhang, Men, Liu, and Lin}]{yu2026automated_kernel_survey}
+Yang Yu, Peiyu Zang, Chi~Hsu Tsai, Haiming Wu, Yixin Shen, Jialing Zhang, Haoyu
+  Wang, Zhiyou Xiao, Jingze Shi, Yuyu Luo, Wentao Zhang, Chunlei Men, Guang
+  Liu, and Yonghua Lin. 2026.
+\newblock \href {https://arxiv.org/abs/2601.15727} {Towards automated kernel
+  generation in the era of {LLM}s}.
+\newblock \emph{arXiv preprint arXiv:2601.15727}.
+
+\bibitem[{Zhang et~al.(2025{\natexlab{a}})Zhang, Zhu, Wei, Song, Nie, Jia,
+  Vijaykumar, Wang, and Olukotun}]{accelopt2025}
+Genghan Zhang, Shaowei Zhu, Anjiang Wei, Zhenyu Song, Allen Nie, Zhen Jia,
+  Nandita Vijaykumar, Yida Wang, and Kunle Olukotun. 2025{\natexlab{a}}.
+\newblock \href {https://arxiv.org/abs/2511.15915} {Accelopt: A self-improving
+  llm agentic system for ai accelerator kernel optimization}.
+\newblock \emph{Preprint}, arXiv:2511.15915.
+
+\bibitem[{Zhang et~al.(2026)Zhang, Zhao, Yu, Xia, Wang, Feng, and
+  Cui}]{zhang2026compilerstack}
+Shuoming Zhang, Jiacheng Zhao, Qiuchu Yu, Chunwei Xia, Zheng Wang, Xiaobing
+  Feng, and Huimin Cui. 2026.
+\newblock \href {https://arxiv.org/abs/2601.02045} {The new compiler stack: A
+  survey on the synergy of {LLMs} and compilers}.
+\newblock \emph{Preprint}, arXiv:2601.02045.
+
+\bibitem[{Zhang et~al.(2025{\natexlab{b}})Zhang, Wang, Li, Luo, Hong, and
+  Ding}]{cudaforge2025}
+Zijian Zhang, Rong Wang, Shiyang Li, Yuebo Luo, Mingyi Hong, and Caiwen Ding.
+  2025{\natexlab{b}}.
+\newblock \href {https://arxiv.org/abs/2511.01884} {Cudaforge: An agent
+  framework with hardware feedback for cuda kernel optimization}.
+\newblock \emph{Preprint}, arXiv:2511.01884.
+
+\bibitem[{Zhu et~al.(2026)Zhu, Peng, Guo, Chen, Guo, Wen, Qin, Chen, Zhou, Gao,
+  Wu, Zhao, and Li}]{qimengkernel2026}
+Xinguo Zhu, Shaohui Peng, Jiaming Guo, Yunji Chen, Qi~Guo, Yuanbo Wen, Hang
+  Qin, Ruizhi Chen, Qirui Zhou, Ke~Gao, Yanjun Wu, Chen Zhao, and Ling Li.
+  2026.
+\newblock {QiMeng-Kernel}: Macro-thinking micro-coding paradigm for {LLM}-based
+  high-performance {GPU} kernel generation.
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial
+  Intelligence (AAAI)}.
+
+\end{thebibliography}

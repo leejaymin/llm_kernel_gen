@@ -1,0 +1,52 @@
+% Figure 1 (한글판): 연구 구조. 단순 블록 배치. 색·점선 없음, 화살표 최소.
+\begin{figure*}[t]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\sffamily,
+  cell/.style={rectangle, draw=black, minimum height=1.15cm, minimum width=4.0cm,
+               align=center, inner sep=4pt},
+  band/.style={rectangle, draw=black, thick, minimum height=1.15cm, minimum width=16.6cm,
+               align=center, inner sep=4pt},
+  arr/.style={-{Stealth[length=6pt]}, thick},
+]
+
+% 1행: 우리가 바꾸는 네 개의 축
+\node[cell] (a1) at (0,0)     {\textbf{모델}\\{\small 상용 8종, 오픈 4종}};
+\node[cell] (a2) at (4.2,0)   {\textbf{하드웨어}\\{\small RTX PRO 6000, H100, A6000}};
+\node[cell] (a3) at (8.4,0)   {\textbf{벤치마크}\\{\small 4종, 424개 과제}};
+\node[cell] (a4) at (12.6,0)  {\textbf{예산}\\{\small 샘플 수, 라운드 수, 턴 수}};
+
+% 2행: 고정된 하니스
+\node[band] (harness) at (6.3,-2.15)
+  {\textbf{하나의 고정된 평가 하니스}\\[2pt]
+   {\small 프롬프트 구성 \ \textbar\ \ 생성 \ \textbar\ \ 코드 추출 \ \textbar\ \
+    \textbf{격리된 서브프로세스에서 채점} \ \textbar\ \ 에러 분류 \ \textbar\ \ 수정과 재시도}};
+
+% 3행: 관측량
+\node[band] (out) at (6.3,-4.15)
+  {\textbf{측정 대상}\\[2pt]
+   {\small 정확성, Fast-0과 Pass@1 \ \textbar\ \ 속도, Fast-1과 Fast-2 \ \textbar\ \
+    에러 유형 \ \textbar\ \ 벽시계 시간과 완주율}};
+
+% 4행: 연구 질문
+\node[band] (rq) at (6.3,-6.15)
+  {\textbf{연구 질문}\\[2pt]
+   {\small RQ1 얼마나 정확한가 \ \textbar\ \ RQ2 설정이 얼마나 좌우하는가 \ \textbar\ \
+    RQ3 실패는 어떤 모습인가 \ \textbar\ \ RQ4 무엇이 정답률을 올리는가 \ \textbar\ \
+    RQ5 무엇이 이식되는가}};
+
+% 화살표 세 개만
+\draw[arr] (6.3,-0.62) -- (harness.north);
+\draw[arr] (harness.south) -- (out.north);
+\draw[arr] (out.south) -- (rq.north);
+
+\end{tikzpicture}%
+}
+\caption{본 연구의 구조. 하나의 평가 하니스를 고정하고 그 위에서 네 개의 축을 바꾼다.
+하니스는 모든 커널을 격리된 서브프로세스에서 채점한다. 이는 선택이 아니라 필수인데,
+잘못된 커널 하나가 CUDA 컨텍스트를 오염시키면 같은 프로세스의 이후 평가가 모두 실패하기 때문이다.
+우리는 새로운 생성 시스템을 제안하지 않는다. 하니스를 고정한 채 한 번에 하나의 축만 바꾸어
+모델, 하드웨어, 벤치마크, 계산 예산의 효과를 분리한다.}
+\label{fig:overview}
+\end{figure*}
